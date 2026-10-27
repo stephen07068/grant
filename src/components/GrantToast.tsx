@@ -67,7 +67,7 @@ export default function GrantToast() {
     const hideTimer = setTimeout(() => {
       setVisible(false);
       // Show next one 30 seconds after it hides
-      const nextTimer = setTimeout(() => showToast(), 30000);
+      const nextTimer = setTimeout(() => showToast(), 20000);
       return () => clearTimeout(nextTimer);
     }, 6000);
 

@@ -1,7 +1,7 @@
 .grant-toast {
   position: fixed;
-  bottom: 24px;
-  left: 24px;
+  top: 80px;
+  right: 24px;
   z-index: 9999;
   display: flex;
   align-items: flex-start;
@@ -16,12 +16,12 @@
 }
 
 .grant-toast--in {
-  transform: translateX(0);
+  transform: translateY(0);
   opacity: 1;
 }
 
 .grant-toast--out {
-  transform: translateX(-120%);
+  transform: translateY(-120%);
   opacity: 0;
   pointer-events: none;
 }
@@ -63,7 +63,7 @@
 
 @media (max-width: 480px) {
   .grant-toast {
-    bottom: 16px;
+    top: 72px;
     left: 12px;
     right: 12px;
     max-width: calc(100% - 24px);
