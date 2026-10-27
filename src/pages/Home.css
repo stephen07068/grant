@@ -268,7 +268,7 @@
   .hero-content { padding-top: 28px; padding-bottom: 28px; flex-direction: column; gap: 0; }
   .hero-eyebrow { font-size: 9.5px; letter-spacing: 1.5px; margin-bottom: 10px; }
   .hero-title { font-size: 26px; letter-spacing: -0.5px; margin-bottom: 10px; }
-  .hero-subtitle { font-size: 13.5px; line-height: 1.6; margin-bottom: 16px; }
+  .hero-subtitle { display: none; }
   .hero-actions { flex-direction: row; width: 100%; gap: 10px; margin-top: 4px !important; }
   .hero-actions .btn { flex: 1; justify-content: center; padding: 10px 12px; font-size: 13.5px; }
 
