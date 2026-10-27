@@ -50,7 +50,7 @@ export default function ReviewsSection() {
 
         {/* Reviews Grid */}
         <div className="reviews-grid">
-          {reviews.map((r) => (
+          {reviews.slice(0, 6).map((r) => (
             <div key={r.id} className="review-card">
               <div className="review-card-top">
                 <div className="review-stars">
@@ -93,11 +93,18 @@ export default function ReviewsSection() {
           ))}
         </div>
 
+        {/* View All Reviews Button */}
+        <div style={{ textAlign: 'center', margin: '36px 0 20px' }}>
+          <Link to="/reviews" className="btn btn-outline btn-lg" style={{ borderColor: 'var(--navy)', color: 'var(--navy)' }}>
+            Read All {reviews.length} Verified Stories <ArrowRight size={18} />
+          </Link>
+        </div>
+
         {/* Bottom Callout */}
         <div className="reviews-bottom-cta">
           <div>
             <h3>Start Your Free Application Today</h3>
-            <p>Explore all 24+ open grants for personal emergency, housing, education, and family support.</p>
+            <p>Explore all open grants for personal emergency, housing, education, and family support.</p>
           </div>
           <Link to="/grants" className="btn btn-primary btn-lg">
             Find Your Grant <ArrowRight size={18} />

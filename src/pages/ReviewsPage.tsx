@@ -10,10 +10,26 @@ export default function ReviewsPage() {
   const filteredReviews = filter === 'all'
     ? reviews
     : reviews.filter(r => {
-        if (filter === 'personal') return r.grantName.toLowerCase().includes('personal') || r.grantName.toLowerCase().includes('emergency') || r.grantName.toLowerCase().includes('single');
-        if (filter === 'housing') return r.grantName.toLowerCase().includes('housing') || r.grantName.toLowerCase().includes('rent');
-        if (filter === 'education') return r.grantName.toLowerCase().includes('education') || r.grantName.toLowerCase().includes('tuition');
-        if (filter === 'veterans') return r.grantName.toLowerCase().includes('veteran');
+        const lowerGrant = r.grantName.toLowerCase();
+        const lowerRole = r.role.toLowerCase();
+        if (filter === 'medical') {
+          return lowerGrant.includes('medical') || lowerGrant.includes('cancer') || lowerGrant.includes('kidney') || lowerGrant.includes('stroke') || lowerGrant.includes('diabetes') || lowerGrant.includes('hospital') || lowerGrant.includes('rare') || lowerGrant.includes('recovery');
+        }
+        if (filter === 'personal') {
+          return lowerGrant.includes('personal') || lowerGrant.includes('emergency') || lowerGrant.includes('single') || lowerGrant.includes('disability');
+        }
+        if (filter === 'housing') {
+          return lowerGrant.includes('housing') || lowerGrant.includes('rent');
+        }
+        if (filter === 'education') {
+          return lowerGrant.includes('education') || lowerGrant.includes('tuition');
+        }
+        if (filter === 'veterans') {
+          return lowerGrant.includes('veteran') || lowerRole.includes('veteran');
+        }
+        if (filter === 'seniors') {
+          return lowerGrant.includes('senior') || lowerGrant.includes('elder') || lowerGrant.includes('alzheimer') || lowerGrant.includes('caregiver');
+        }
         return true;
       });
 
@@ -77,6 +93,12 @@ export default function ReviewsPage() {
             All Stories ({reviews.length})
           </button>
           <button
+            className={`reviews-filter-btn ${filter === 'medical' ? 'active' : ''}`}
+            onClick={() => setFilter('medical')}
+          >
+            Medical & Healthcare
+          </button>
+          <button
             className={`reviews-filter-btn ${filter === 'personal' ? 'active' : ''}`}
             onClick={() => setFilter('personal')}
           >
@@ -93,6 +115,12 @@ export default function ReviewsPage() {
             onClick={() => setFilter('education')}
           >
             Higher Education & Tuition
+          </button>
+          <button
+            className={`reviews-filter-btn ${filter === 'seniors' ? 'active' : ''}`}
+            onClick={() => setFilter('seniors')}
+          >
+            Seniors & Caregivers
           </button>
           <button
             className={`reviews-filter-btn ${filter === 'veterans' ? 'active' : ''}`}
