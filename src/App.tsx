@@ -11,6 +11,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import ReviewsPage from './pages/ReviewsPage';
+import GrantToast from './components/GrantToast';
 import './styles/globals.css';
 
 function ScrollToTop() {
@@ -51,6 +52,7 @@ function AppRoutes() {
         </Routes>
       </main>
       <Footer />
+      <GrantToast />
     </>
   );
 }

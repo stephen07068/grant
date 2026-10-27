@@ -56,14 +56,6 @@ export default function Home() {
               to <strong>achieve your goals.</strong>
             </p>
 
-            <div className="hero-actions" style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginTop: '8px' }}>
-              <Link to="/grants" className="btn btn-primary btn-lg">
-                Explore Grants <ArrowRight size={18} />
-              </Link>
-              <Link to="/apply" className="btn btn-outline btn-lg" style={{ borderColor: 'rgba(255,255,255,0.4)', color: '#fff' }}>
-                Apply Now
-              </Link>
-            </div>
           </div>
 
           {/* Right Cursive Accent Block */}

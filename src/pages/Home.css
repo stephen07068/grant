@@ -264,13 +264,11 @@
 }
 
 @media (max-width: 640px) {
-  .hero { min-height: auto; padding: 0; }
-  .hero-content { padding-top: 28px; padding-bottom: 28px; flex-direction: column; gap: 0; }
-  .hero-eyebrow { font-size: 9.5px; letter-spacing: 1.5px; margin-bottom: 10px; }
-  .hero-title { font-size: 26px; letter-spacing: -0.5px; margin-bottom: 10px; }
+  .hero { min-height: 420px; padding: 0; }
+  .hero-content { padding-top: 44px; padding-bottom: 44px; flex-direction: column; gap: 0; }
+  .hero-eyebrow { font-size: 10px; letter-spacing: 1.5px; margin-bottom: 14px; }
+  .hero-title { font-size: 34px; letter-spacing: -0.5px; margin-bottom: 0; }
   .hero-subtitle { display: none; }
-  .hero-actions { flex-direction: row; width: 100%; gap: 10px; margin-top: 4px !important; }
-  .hero-actions .btn { flex: 1; justify-content: center; padding: 10px 12px; font-size: 13.5px; }
 
   .category-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .category-card { padding: 16px 8px 14px; gap: 8px; }
