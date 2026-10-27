@@ -265,12 +265,12 @@
 
 @media (max-width: 640px) {
   .hero { min-height: auto; padding: 0; }
-  .hero-content { padding-top: 40px; padding-bottom: 40px; flex-direction: column; gap: 28px; }
-  .hero-title { font-size: 30px; letter-spacing: -0.5px; margin-bottom: 12px; }
-  .hero-subtitle { font-size: 14.5px; margin-bottom: 22px; }
-  .hero-eyebrow { font-size: 10px; }
-  .hero-actions { flex-direction: column; width: 100%; gap: 10px; }
-  .hero-actions .btn { width: 100%; justify-content: center; }
+  .hero-content { padding-top: 28px; padding-bottom: 28px; flex-direction: column; gap: 0; }
+  .hero-eyebrow { font-size: 9.5px; letter-spacing: 1.5px; margin-bottom: 10px; }
+  .hero-title { font-size: 26px; letter-spacing: -0.5px; margin-bottom: 10px; }
+  .hero-subtitle { font-size: 13.5px; line-height: 1.6; margin-bottom: 16px; }
+  .hero-actions { flex-direction: row; width: 100%; gap: 10px; margin-top: 4px !important; }
+  .hero-actions .btn { flex: 1; justify-content: center; padding: 10px 12px; font-size: 13.5px; }
 
   .category-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .category-card { padding: 16px 8px 14px; gap: 8px; }
@@ -281,9 +281,9 @@
   .how-grid { grid-template-columns: 1fr; gap: 28px; }
   .how-grid::before { display: none; }
 
-  .cta-section { padding: 60px 0; }
-  .cta-content { gap: 28px; }
-  .cta-content h2 { font-size: 26px; }
+  .cta-section { padding: 48px 0; }
+  .cta-content { gap: 24px; }
+  .cta-content h2 { font-size: 24px; }
   .cta-content > div > p { font-size: 14px; }
   .cta-features { grid-template-columns: 1fr 1fr; gap: 12px; }
 
