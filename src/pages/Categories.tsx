@@ -5,6 +5,10 @@ import { categories } from '../data/grants';
 import './Categories.css';
 
 const categoryIcons: Record<string, string> = {
+  'Cancer & Critical Illness': '🎗️',
+  'Chronic Disease & Rare Conditions': '💊',
+  'Individual Medical Bills': '🏦',
+  'Senior & Elder Care': '👴',
   'Military & Veterans': '🎖️',
   'Hospital & Healthcare': '🏥',
   'Emergency Medical': '🚑',
@@ -45,7 +49,7 @@ export default function Categories() {
           </div>
           <h1>Grant <span className="script-accent">Categories</span></h1>
           <p>
-            Explore all 18 grant categories and find opportunities for <span className="script-sub">personal, family, & community</span> needs.
+            Explore all {categories.length} grant categories and find opportunities for <span className="script-sub">personal, family, & community</span> needs.
           </p>
         </div>
       </div>
@@ -75,7 +79,7 @@ export default function Categories() {
               className="category-detail-card"
             >
               <div className="category-detail-icon">
-                {categoryIcons[cat.name]}
+                {categoryIcons[cat.name] || cat.icon || '📋'}
               </div>
               <div className="category-detail-body">
                 <h3 className="category-detail-name">{cat.name}</h3>

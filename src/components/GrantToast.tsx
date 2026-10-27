@@ -10,6 +10,11 @@ const NAMES = [
 
 const GRANT_TYPES = [
   'Emergency Relief Grant',
+  'Cancer Patient Assistance Grant',
+  'Medical Debt Relief Grant',
+  'Dialysis & Kidney Patient Grant',
+  'Senior Healthcare & In-Home Care Grant',
+  'Prescription Drug Assistance Grant',
   'Housing Assistance Grant',
   'Education & Tuition Grant',
   'Small Business Innovation Grant',

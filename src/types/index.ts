@@ -16,7 +16,11 @@ export type GrantCategory =
   | 'Environmental & Clean Energy'
   | 'Disaster Recovery'
   | 'Arts & Culture'
-  | 'Scientific Research';
+  | 'Scientific Research'
+  | 'Cancer & Critical Illness'
+  | 'Chronic Disease & Rare Conditions'
+  | 'Senior & Elder Care'
+  | 'Individual Medical Bills';
 
 export type GrantStatus = 'Open' | 'Upcoming' | 'Closed';
 export type ApplicantType =
