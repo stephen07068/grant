@@ -12,10 +12,16 @@ const APPLICANT_TYPES: ApplicantType[] = [
 ];
 
 const US_STATES = [
-  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
-  'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
-  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
-  'VA','WA','WV','WI','WY','DC',
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
+  'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
+  'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
+  'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
+  'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
+  'New Hampshire', 'New Jersey', 'New Mexico', 'New York',
+  'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon',
+  'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
+  'West Virginia', 'Wisconsin', 'Wyoming', 'District of Columbia',
 ];
 
 type FormErrors = Partial<Record<keyof ApplicationFormData, string>>;
@@ -59,7 +65,7 @@ export default function Apply() {
     if (!form.whatsapp.trim()) e.whatsapp = 'WhatsApp number required';
     if (!form.grantId) e.grantId = 'Please select a grant';
     if (!form.projectTitle.trim()) e.projectTitle = 'Required';
-    if (form.projectDescription.trim().length < 50) e.projectDescription = 'Minimum 50 characters required';
+    // Project description is optional and not required to be 50 words
     if (!form.meetsEligibility) e.meetsEligibility = 'Required';
     if (!form.notPreviouslyFunded) e.notPreviouslyFunded = 'Required';
     return e;
@@ -307,12 +313,8 @@ export default function Apply() {
               {errors.projectTitle && <span className="form-error">{errors.projectTitle}</span>}
             </div>
             <div className="form-group">
-              <label className="form-label">Project Description <span className="req">*</span></label>
-              <textarea value={form.projectDescription} onChange={e => setField('projectDescription', e.target.value)} placeholder="Describe your project and how the funds will be used..." className={`form-textarea ${errors.projectDescription ? 'error' : ''}`} rows={5} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                {errors.projectDescription ? <span className="form-error">{errors.projectDescription}</span> : <span />}
-                <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>{form.projectDescription.length} chars</span>
-              </div>
+              <label className="form-label">Project Description <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--gray-400)' }}>(Optional)</span></label>
+              <textarea value={form.projectDescription} onChange={e => setField('projectDescription', e.target.value)} placeholder="Describe your project, personal situation, or how the grant funds will be used..." className="form-textarea" rows={4} />
             </div>
           </div>
 
