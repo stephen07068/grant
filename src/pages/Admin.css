@@ -1,0 +1,29 @@
+.admin-page {
+  background: var(--off-white);
+  min-height: calc(100vh - 200px);
+}
+
+.admin-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-app-card {
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.admin-app-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--navy-light);
+}
+
+@media (max-width: 640px) {
+  .admin-login-wrap {
+    padding: 16px !important;
+  }
+  .admin-app-card {
+    padding: 16px !important;
+  }
+}

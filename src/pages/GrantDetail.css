@@ -1,0 +1,161 @@
+.grant-detail-page { min-height: 100vh; background: var(--off-white); }
+
+.grant-detail-page .page-header { background: var(--navy); }
+
+.grant-detail-header-content { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+
+.grant-detail-badges { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+
+.grant-detail-header-content h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.grant-detail-header-content p { color: rgba(255,255,255,0.65); font-size: 14px; }
+
+/* Layout */
+.grant-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 32px;
+  padding-top: 32px;
+  padding-bottom: 64px;
+  align-items: start;
+}
+
+/* Main */
+.grant-detail-main { display: flex; flex-direction: column; gap: 0; }
+
+.grant-detail-img {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  height: 320px;
+  margin-bottom: 20px;
+}
+.grant-detail-img img { width: 100%; height: 100%; object-fit: cover; }
+
+.demo-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: #92400e;
+  margin-bottom: 24px;
+}
+.demo-notice svg { flex-shrink: 0; margin-top: 1px; color: #d97706; }
+
+.grant-detail-section {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.grant-detail-section h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.grant-detail-section h2 svg { color: var(--gold); }
+
+.grant-detail-section > p { font-size: 14.5px; color: var(--gray-600); line-height: 1.75; }
+
+.grant-checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+.grant-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+.check-icon { color: var(--green); flex-shrink: 0; margin-top: 2px; }
+.file-icon { color: var(--navy); flex-shrink: 0; margin-top: 2px; }
+
+.applicant-types { display: flex; flex-wrap: wrap; gap: 8px; }
+.applicant-badge { font-size: 12px; padding: 4px 12px; }
+
+/* Sidebar */
+.grant-detail-sidebar { position: sticky; top: 80px; }
+
+.grant-sidebar-card {
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.grant-amount-display {
+  background: var(--navy);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.grant-amount-label { font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+.grant-amount-value { font-size: 22px; font-weight: 800; color: var(--gold); }
+
+.grant-sidebar-meta { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+.sidebar-meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.sidebar-meta-item > svg { color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+.sidebar-meta-item > div { display: flex; flex-direction: column; gap: 2px; }
+.sidebar-meta-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-400); font-weight: 600; }
+.sidebar-meta-value { font-size: 13.5px; font-weight: 600; color: var(--gray-800); }
+
+.grant-sidebar-actions {
+  padding: 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grant-sidebar-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--gray-500);
+}
+.grant-sidebar-note svg { flex-shrink: 0; margin-top: 1px; color: var(--gray-400); }
+
+/* Related */
+.grant-detail-related { background: var(--white); padding: 64px 0; border-top: 1px solid var(--gray-200); }
+
+.related-grants-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .grant-detail-layout { grid-template-columns: 1fr; }
+  .grant-detail-sidebar { position: static; }
+}
+@media (max-width: 768px) {
+  .related-grants-grid { grid-template-columns: 1fr; }
+  .grant-detail-header-content h1 { font-size: 20px; }
+}
