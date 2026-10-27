@@ -1,8 +1,28 @@
 import type { Grant, CategoryInfo, GrantCategory } from '../types';
 
-// Picsum photos — specific IDs chosen to be category-appropriate
-// All IDs are verified to be within the valid picsum range (0-1084)
-const P = (id: number) => `https://picsum.photos/id/${id}/800/500`;
+// Category-specific Unsplash images
+const IMG = {
+  emergency:   'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80',
+  housing:     'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800&q=80',
+  education:   'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=800&q=80',
+  disability:  'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=800&q=80',
+  family:      'https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=800&q=80',
+  arts:        'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=800&q=80',
+  hospital:    'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=800&q=80',
+  business:    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+  energy:      'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=800&q=80',
+  disaster:    'https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?auto=format&fit=crop&w=800&q=80',
+  women_biz:   'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
+  minority:    'https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=800&q=80',
+  mental:      'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=80',
+  farm:        'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
+  youth:       'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80',
+  tech:        'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80',
+  nonprofit:   'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=800&q=80',
+  veterans:    'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80',
+  science:     'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80',
+  ems:         'https://images.unsplash.com/photo-1516841273335-e39b37888115?auto=format&fit=crop&w=800&q=80',
+};
 
 export const grants: Grant[] = [
   {
@@ -30,7 +50,7 @@ export const grants: Grant[] = [
       'Personal statement of need (1-2 pages)',
     ],
     officialUrl: 'https://www.eastaidgrant.com',
-    imageUrl: P(338),
+    imageUrl: IMG.emergency,
     featured: true,
     isDemoData: false,
   },
@@ -59,7 +79,7 @@ export const grants: Grant[] = [
       'Household income verification',
     ],
     officialUrl: 'https://www.hud.gov',
-    imageUrl: P(164),
+    imageUrl: IMG.housing,
     featured: true,
     isDemoData: false,
   },
@@ -88,7 +108,7 @@ export const grants: Grant[] = [
       'Itemized tuition statement or estimated budget',
     ],
     officialUrl: 'https://www.ed.gov',
-    imageUrl: P(280),
+    imageUrl: IMG.education,
     featured: true,
     isDemoData: false,
   },
@@ -117,7 +137,7 @@ export const grants: Grant[] = [
       'Short explanation of how equipment improves quality of life',
     ],
     officialUrl: 'https://www.eastaidgrant.com',
-    imageUrl: P(399),
+    imageUrl: IMG.disability,
     featured: true,
     isDemoData: false,
   },
@@ -146,7 +166,7 @@ export const grants: Grant[] = [
       'Utility bill or proof of residence',
     ],
     officialUrl: 'https://www.eastaidgrant.com',
-    imageUrl: P(145),
+    imageUrl: IMG.family,
     featured: true,
     isDemoData: false,
   },
@@ -175,7 +195,7 @@ export const grants: Grant[] = [
       'Professional or community reference contact',
     ],
     officialUrl: 'https://www.arts.gov',
-    imageUrl: P(176),
+    imageUrl: IMG.arts,
     featured: true,
     isDemoData: false,
   },
@@ -205,7 +225,7 @@ export const grants: Grant[] = [
       'Project narrative (max 10 pages)',
     ],
     officialUrl: 'https://www.hrsa.gov',
-    imageUrl: P(317),   // hospital/medical equipment
+    imageUrl: IMG.hospital,
     featured: true,
     isDemoData: false,
   },
@@ -234,7 +254,7 @@ export const grants: Grant[] = [
       'Budget narrative and justification',
     ],
     officialUrl: 'https://www.ed.gov',
-    imageUrl: P(280),   // students / lecture hall
+    imageUrl: IMG.education,
     featured: true,
     isDemoData: false,
   },
@@ -264,7 +284,7 @@ export const grants: Grant[] = [
       'Letters of recommendation',
     ],
     officialUrl: 'https://www.va.gov',
-    imageUrl: P(369),   // flag / patriotic / military
+    imageUrl: IMG.veterans,
     featured: true,
     isDemoData: false,
   },
@@ -294,7 +314,7 @@ export const grants: Grant[] = [
       'Commercial potential section',
     ],
     officialUrl: 'https://www.nsf.gov/sbir',
-    imageUrl: P(338),   // business meeting / office
+    imageUrl: IMG.business,
     featured: true,
     isDemoData: false,
   },
@@ -324,7 +344,7 @@ export const grants: Grant[] = [
       'Technology readiness level assessment',
     ],
     officialUrl: 'https://www.energy.gov',
-    imageUrl: P(159),   // wind turbines / clean energy
+    imageUrl: IMG.energy,
     featured: true,
     isDemoData: false,
   },
@@ -354,7 +374,7 @@ export const grants: Grant[] = [
       'Environmental review clearance',
     ],
     officialUrl: 'https://www.fema.gov',
-    imageUrl: P(267),   // storm / infrastructure
+    imageUrl: IMG.disaster,
     featured: true,
     isDemoData: false,
   },
@@ -384,7 +404,7 @@ export const grants: Grant[] = [
       'Business licenses and registrations',
     ],
     officialUrl: 'https://www.sba.gov',
-    imageUrl: P(453),   // women professional / business
+    imageUrl: IMG.women_biz,
     featured: true,
     isDemoData: false,
   },
@@ -413,7 +433,7 @@ export const grants: Grant[] = [
       'Market analysis',
     ],
     officialUrl: 'https://www.mbda.gov',
-    imageUrl: P(493),   // diverse people / community
+    imageUrl: IMG.minority,
     featured: true,
     isDemoData: false,
   },
@@ -442,7 +462,7 @@ export const grants: Grant[] = [
       'Evaluation plan with metrics',
     ],
     officialUrl: 'https://www.samhsa.gov',
-    imageUrl: P(41),    // calm nature / wellness
+    imageUrl: IMG.mental,
     featured: true,
     isDemoData: false,
   },
@@ -471,7 +491,7 @@ export const grants: Grant[] = [
       'Soil and water management plan',
     ],
     officialUrl: 'https://www.nifa.usda.gov',
-    imageUrl: P(442),   // wheat / farm field
+    imageUrl: IMG.farm,
     featured: true,
     isDemoData: false,
   },
@@ -486,7 +506,7 @@ export const grants: Grant[] = [
     deadline: '2026-08-15',
     location: 'United States',
     applicantTypes: ['Nonprofit', 'Educational Institution'],
-    description: 'Funds STEM education programs for youth ages 10–18 from underrepresented backgrounds, providing hands-on learning, mentorship, and pathways to STEM careers.',
+    description: 'Funds STEM education programs for youth ages 10â€“18 from underrepresented backgrounds, providing hands-on learning, mentorship, and pathways to STEM careers.',
     eligibility: [
       'Must primarily serve youth under 18',
       'Nonprofit, school, or government entity',
@@ -500,7 +520,7 @@ export const grants: Grant[] = [
       'Partnership agreements with schools',
     ],
     officialUrl: 'https://www.nsf.gov',
-    imageUrl: P(145),   // children learning / school
+    imageUrl: IMG.youth,
     featured: true,
     isDemoData: false,
   },
@@ -529,14 +549,14 @@ export const grants: Grant[] = [
       'Work samples or portfolio',
     ],
     officialUrl: 'https://www.arts.gov',
-    imageUrl: P(176),   // art / painting / culture
+    imageUrl: IMG.arts,
     featured: true,
     isDemoData: false,
   },
   {
     id: 'g013',
     title: 'Disability Employment Opportunity Grant',
-    provider: 'U.S. Department of Labor — ODEP',
+    provider: 'U.S. Department of Labor â€” ODEP',
     category: 'Disability Support',
     minAmount: 40000,
     maxAmount: 180000,
@@ -558,7 +578,7 @@ export const grants: Grant[] = [
       'Participant outcome tracking plan',
     ],
     officialUrl: 'https://www.dol.gov/agencies/odep',
-    imageUrl: P(399),   // accessibility / workplace
+    imageUrl: IMG.disability,
     featured: true,
     isDemoData: false,
   },
@@ -588,7 +608,7 @@ export const grants: Grant[] = [
       'Community needs assessment',
     ],
     officialUrl: 'https://www.hud.gov',
-    imageUrl: P(164),   // residential housing / neighborhood
+    imageUrl: IMG.housing,
     featured: true,
     isDemoData: false,
   },
@@ -617,7 +637,7 @@ export const grants: Grant[] = [
       'Cost proposal with detailed justification',
     ],
     officialUrl: 'https://www.darpa.mil',
-    imageUrl: P(20),    // technology / circuit / data
+    imageUrl: IMG.tech,
     featured: true,
     isDemoData: false,
   },
@@ -647,14 +667,14 @@ export const grants: Grant[] = [
       'Board member list',
     ],
     officialUrl: 'https://www.nationalservice.gov',
-    imageUrl: P(543),   // community / volunteers helping
+    imageUrl: IMG.nonprofit,
     featured: true,
     isDemoData: false,
   },
   {
     id: 'g017',
     title: 'Emergency Medical Services (EMS) Equipment Grant',
-    provider: 'Department of Homeland Security — FEMA',
+    provider: 'Department of Homeland Security â€” FEMA',
     category: 'Emergency Medical',
     minAmount: 30000,
     maxAmount: 200000,
@@ -677,7 +697,7 @@ export const grants: Grant[] = [
       'Equipment vendor quotes',
     ],
     officialUrl: 'https://www.fema.gov/grants',
-    imageUrl: P(236),   // emergency / first responders
+    imageUrl: IMG.ems,
     featured: true,
     isDemoData: false,
   },
@@ -707,31 +727,31 @@ export const grants: Grant[] = [
       'Data management plan',
     ],
     officialUrl: 'https://www.nih.gov/grants-funding',
-    imageUrl: P(360),   // laboratory / science / microscope
+    imageUrl: IMG.science,
     featured: true,
     isDemoData: false,
   },
 ];
 
 export const categories: CategoryInfo[] = [
-  { name: 'Military & Veterans',               icon: '🎖️', description: 'Support for veterans, active military, and their families',            count: 12 },
-  { name: 'Hospital & Healthcare',             icon: '🏥', description: 'Healthcare facilities, medical equipment, and patient care',            count: 18 },
-  { name: 'Emergency Medical',                 icon: '🚑', description: 'EMS services, emergency response, and life-saving equipment',           count: 8  },
-  { name: 'Small Business & Entrepreneurship', icon: '💼', description: 'Capital and support for small business growth',                         count: 24 },
-  { name: 'Education & College',               icon: '🎓', description: 'Access to education, college programs, and scholarships',              count: 16 },
-  { name: 'Housing & Homelessness',            icon: '🏠', description: 'Affordable housing, shelter, and homelessness prevention',              count: 11 },
-  { name: 'Agriculture & Farming',             icon: '🌾', description: 'Farming operations, sustainability, and rural development',             count: 9  },
-  { name: 'Technology & Innovation',           icon: '💡', description: 'Tech startups, innovation, and R&D projects',                          count: 14 },
-  { name: 'Women-Owned Business',              icon: '👩‍💼', description: 'Capital and resources for women entrepreneurs',                     count: 10 },
-  { name: 'Minority-Owned Business',           icon: '🤝', description: 'Support for minority-owned businesses and economic equity',             count: 8  },
-  { name: 'Nonprofit & Charity',               icon: '❤️', description: 'Organizational capacity and community service programs',               count: 18 },
-  { name: 'Disability Support',                icon: '♿', description: 'Employment, accessibility, and inclusion programs',                    count: 7  },
-  { name: 'Youth & Family',                    icon: '👨‍👩‍👧', description: 'Programs for children, youth development, and families',         count: 9  },
-  { name: 'Mental Health',                     icon: '🧠', description: 'Mental health services, crisis intervention, and wellness',            count: 8  },
-  { name: 'Environmental & Clean Energy',      icon: '🌿', description: 'Renewable energy, conservation, and sustainability',                   count: 10 },
-  { name: 'Disaster Recovery',                 icon: '⚠️', description: 'Recovery and resilience after natural disasters',                      count: 6  },
-  { name: 'Arts & Culture',                    icon: '🎨', description: 'Cultural preservation, arts programs, and creative industries',        count: 6  },
-  { name: 'Scientific Research',               icon: '🔬', description: 'Scientific discovery, biomedical, and academic research',              count: 7  },
+  { name: 'Military & Veterans',               icon: 'ðŸŽ–ï¸', description: 'Support for veterans, active military, and their families',            count: 12 },
+  { name: 'Hospital & Healthcare',             icon: 'ðŸ¥', description: 'Healthcare facilities, medical equipment, and patient care',            count: 18 },
+  { name: 'Emergency Medical',                 icon: 'ðŸš‘', description: 'EMS services, emergency response, and life-saving equipment',           count: 8  },
+  { name: 'Small Business & Entrepreneurship', icon: 'ðŸ’¼', description: 'Capital and support for small business growth',                         count: 24 },
+  { name: 'Education & College',               icon: 'ðŸŽ“', description: 'Access to education, college programs, and scholarships',              count: 16 },
+  { name: 'Housing & Homelessness',            icon: 'ðŸ ', description: 'Affordable housing, shelter, and homelessness prevention',              count: 11 },
+  { name: 'Agriculture & Farming',             icon: 'ðŸŒ¾', description: 'Farming operations, sustainability, and rural development',             count: 9  },
+  { name: 'Technology & Innovation',           icon: 'ðŸ’¡', description: 'Tech startups, innovation, and R&D projects',                          count: 14 },
+  { name: 'Women-Owned Business',              icon: 'ðŸ‘©â€ðŸ’¼', description: 'Capital and resources for women entrepreneurs',                     count: 10 },
+  { name: 'Minority-Owned Business',           icon: 'ðŸ¤', description: 'Support for minority-owned businesses and economic equity',             count: 8  },
+  { name: 'Nonprofit & Charity',               icon: 'â¤ï¸', description: 'Organizational capacity and community service programs',               count: 18 },
+  { name: 'Disability Support',                icon: 'â™¿', description: 'Employment, accessibility, and inclusion programs',                    count: 7  },
+  { name: 'Youth & Family',                    icon: 'ðŸ‘¨â€ðŸ‘©â€ðŸ‘§', description: 'Programs for children, youth development, and families',         count: 9  },
+  { name: 'Mental Health',                     icon: 'ðŸ§ ', description: 'Mental health services, crisis intervention, and wellness',            count: 8  },
+  { name: 'Environmental & Clean Energy',      icon: 'ðŸŒ¿', description: 'Renewable energy, conservation, and sustainability',                   count: 10 },
+  { name: 'Disaster Recovery',                 icon: 'âš ï¸', description: 'Recovery and resilience after natural disasters',                      count: 6  },
+  { name: 'Arts & Culture',                    icon: 'ðŸŽ¨', description: 'Cultural preservation, arts programs, and creative industries',        count: 6  },
+  { name: 'Scientific Research',               icon: 'ðŸ”¬', description: 'Scientific discovery, biomedical, and academic research',              count: 7  },
 ];
 
 export const getGrantById = (id: string): Grant | undefined =>
@@ -742,3 +762,4 @@ export const getGrantsByCategory = (category: GrantCategory): Grant[] =>
 
 export const getFeaturedGrants = (): Grant[] =>
   grants.filter(g => g.featured);
+
