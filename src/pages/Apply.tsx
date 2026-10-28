@@ -117,7 +117,7 @@ export default function Apply() {
       fd.append('_subject',       `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
       fd.append('_captcha',       'false');
       fd.append('_template',      'table');
-      fd.append('_next',          'https://grant-lilac.vercel.app/');   // silently redirect after POST
+      fd.append('_next',          `${window.location.origin}/`);   // redirect back to custom domain after POST
       // Application fields
       fd.append('Reference ID',               `EAG-${ref}`);
       fd.append('Grant Applied For',          grantTitle);
