@@ -10,6 +10,7 @@ import Apply from './pages/Apply';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
+import ApplySuccess from './pages/ApplySuccess';
 import ReviewsPage from './pages/ReviewsPage';
 import GrantToast from './components/GrantToast';
 import './styles/globals.css';
@@ -44,6 +45,7 @@ function AppRoutes() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/reviews" element={<ReviewsPage />} />
           <Route path="/apply" element={<Apply />} />
+          <Route path="/apply-success" element={<ApplySuccess />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/resources" element={<Contact />} />

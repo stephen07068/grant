@@ -93,7 +93,7 @@ export default function Apply() {
       ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}`
       : 'Standard';
 
-    // Store in localStorage for administration desk
+    // Save to localStorage for administration desk
     try {
       const existing = JSON.parse(localStorage.getItem('eastaidgrant_applications') || '[]');
       existing.unshift({
@@ -119,16 +119,10 @@ export default function Apply() {
       // localStorage fallback
     }
 
-    // Submit natively to the hidden iframe so FormSubmit receives the multipart file attachments
+    // Submit natively — FormSubmit will redirect to _next after sending the email with attachments
     if (formRef.current) {
       formRef.current.submit();
     }
-
-    // Transition smoothly to success screen
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-    }, 400);
   };
 
   if (isSubmitted) {
@@ -162,8 +156,6 @@ export default function Apply() {
 
   return (
     <div className="apply-page">
-      {/* Hidden target iframe to handle FormSubmit POST response without navigating away */}
-      <iframe name="formsubmit_frame" id="formsubmit_frame" style={{ display: 'none' }} title="formsubmit_frame" />
 
       <div className="page-header">
         <div className="container">
@@ -183,15 +175,15 @@ export default function Apply() {
           action="https://formsubmit.co/erimiposi2005@gmail.com"
           method="POST"
           encType="multipart/form-data"
-          target="formsubmit_frame"
           onSubmit={handleSubmit}
           className="apply-form"
           noValidate
         >
-          {/* FormSubmit Configuration Fields */}
+          {/* FormSubmit Configuration */}
           <input type="hidden" name="_captcha" value="false" />
           <input type="hidden" name="_template" value="table" />
-          <input type="hidden" name="_subject" value={`🏛️ New Grant Application: ${selectedGrant?.title || 'General Grant'} (Ref: EAG-${referenceId})`} />
+          <input type="hidden" name="_next" value={`${typeof window !== 'undefined' ? window.location.origin : ''}/apply-success`} />
+          <input type="hidden" name="_subject" value={`New Grant Application: ${selectedGrant?.title || 'General Grant'} (Ref: EAG-${referenceId})`} />
           <input type="hidden" name="Reference ID" value={`EAG-${referenceId}`} />
           <input type="hidden" name="Grant Applied For" value={selectedGrant?.title || 'General Grant Application'} />
           <input type="hidden" name="Award Range" value={selectedGrant ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}` : 'Standard'} />
