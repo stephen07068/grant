@@ -320,7 +320,10 @@ export default function Apply() {
 
           {/* Documents */}
           <div className="apply-section">
-            <h2>Supporting Documents <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--gray-400)' }}>(Optional)</span></h2>
+            <h2>ID Cards &amp; Supporting Documents <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--gray-400)' }}>(Optional)</span></h2>
+            <p style={{ fontSize: 13.5, color: 'var(--gray-500)', marginBottom: 14, lineHeight: 1.6 }}>
+              Upload any relevant ID cards, proof of identity, or supporting documents to strengthen your application.
+            </p>
             <div
               className={`file-drop-zone ${dragOver ? 'drag-over' : ''}`}
               onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -330,7 +333,7 @@ export default function Apply() {
             >
               <Upload size={32} />
               <p><strong>Click to upload or drag and drop</strong></p>
-              <p className="file-drop-hint">PDF, DOC, DOCX, PNG, JPG — max 10 MB each</p>
+              <p className="file-drop-hint">ID Cards, PDF, DOC, PNG, JPG — max 10 MB each</p>
               <input id="file-input" type="file" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" style={{ display: 'none' }} onChange={e => handleFiles(e.target.files)} />
             </div>
             {form.documents.length > 0 && (
