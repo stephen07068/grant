@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Send, CheckCircle, MessageSquare } from 'lucide-react';
+import { Mail, MapPin, Send, CheckCircle, MessageSquare } from 'lucide-react';
 import './Contact.css';
 
 export default function Contact() {
@@ -64,7 +64,6 @@ export default function Contact() {
   };
 
   const info = [
-    { icon: <Phone size={20} />,         label: 'Phone',    value: '+1 (585) 514-9783',       sub: 'Mon–Fri, 9am–6pm ET'     },
     { icon: <MessageSquare size={20} />, label: 'WhatsApp', value: '+1 (585) 514-9783',       sub: 'Direct chat & support'   },
     { icon: <Mail size={20} />,          label: 'Email',    value: 'support@eastaidgrant.com', sub: 'We reply within 24 hours' },
     { icon: <MapPin size={20} />,        label: 'Location', value: 'United States',            sub: 'Serving all 50 states'   },
