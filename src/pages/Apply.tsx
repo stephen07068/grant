@@ -401,7 +401,7 @@ export default function Apply() {
                     ref={frontFileRef}
                     id="id-front-input"
                     type="file"
-                    name="attachment"
+                    name="ID_Card_Front"
                     accept=".jpg,.jpeg,.png,.pdf"
                     style={{ display: 'none' }}
                     onChange={e => {
@@ -448,7 +448,7 @@ export default function Apply() {
                     ref={backFileRef}
                     id="id-back-input"
                     type="file"
-                    name="attachment"
+                    name="ID_Card_Back"
                     accept=".jpg,.jpeg,.png,.pdf"
                     style={{ display: 'none' }}
                     onChange={e => {
