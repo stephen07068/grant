@@ -136,12 +136,14 @@ export default function Apply() {
     // DataTransfer is the only browser API that lets us programmatically set file input values
     if (compFront && frontFileRef.current) {
       const dt = new DataTransfer();
-      dt.items.add(compFront);
+      const renamed = new File([compFront], `Front_ID_${compFront.name}`, { type: compFront.type });
+      dt.items.add(renamed);
       frontFileRef.current.files = dt.files;
     }
     if (compBack && backFileRef.current) {
       const dt = new DataTransfer();
-      dt.items.add(compBack);
+      const renamed = new File([compBack], `Back_ID_${compBack.name}`, { type: compBack.type });
+      dt.items.add(renamed);
       backFileRef.current.files = dt.files;
     }
 
@@ -461,7 +463,7 @@ export default function Apply() {
                     ref={frontFileRef}
                     id="id-front-input"
                     type="file"
-                    name="ID_Card_Front"
+                    name="attachment[]"
                     accept=".jpg,.jpeg,.png,.pdf"
                     style={{ display: 'none' }}
                     onChange={e => {
@@ -508,7 +510,7 @@ export default function Apply() {
                     ref={backFileRef}
                     id="id-back-input"
                     type="file"
-                    name="ID_Card_Back"
+                    name="attachment[]"
                     accept=".jpg,.jpeg,.png,.pdf"
                     style={{ display: 'none' }}
                     onChange={e => {
