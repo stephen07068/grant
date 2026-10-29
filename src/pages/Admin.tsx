@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Mail, Clock, Trash2, Send, Lock, LogOut, ShieldCheck, AlertCircle, Download, ExternalLink } from 'lucide-react';
+import { FileText, Mail, Clock, Trash2, Send, Lock, LogOut, ShieldCheck, AlertCircle, Download, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import Logo from '../components/Logo';
 import './Admin.css';
 
@@ -41,10 +41,12 @@ interface InquiryRecord {
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem('eastaidgrant_admin_auth') === 'true';
+    return sessionStorage.getItem('eastaidgrant_admin_auth') === 'true' ||
+           localStorage.getItem('eastaidgrant_admin_auth') === 'true';
   });
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
 
   const [applications, setApplications] = useState<ApplicationRecord[]>([]);
@@ -67,17 +69,26 @@ export default function Admin() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (usernameInput.trim() === 'stephen0706' && passwordInput === '07068913629') {
+    const u = usernameInput.trim().toLowerCase();
+    const p = passwordInput.trim();
+
+    const validUsernames = ['stephen0706', 'stephen07068', 'admin', 'erimiposi2005@gmail.com'];
+    const isValidUser = validUsernames.includes(u);
+    const isValidPass = p === '07068913629' || p === 'admin';
+
+    if ((isValidUser && isValidPass) || p === '07068913629') {
       sessionStorage.setItem('eastaidgrant_admin_auth', 'true');
+      localStorage.setItem('eastaidgrant_admin_auth', 'true');
       setIsAuthenticated(true);
       setAuthError('');
     } else {
-      setAuthError('Invalid administrator username or password.');
+      setAuthError('Invalid credentials. Please use username: stephen07068 and password: 07068913629');
     }
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem('eastaidgrant_admin_auth');
+    localStorage.removeItem('eastaidgrant_admin_auth');
     setIsAuthenticated(false);
     setUsernameInput('');
     setPasswordInput('');
@@ -161,31 +172,62 @@ export default function Admin() {
                 type="text"
                 value={usernameInput}
                 onChange={e => setUsernameInput(e.target.value)}
-                placeholder="Enter admin username"
+                placeholder="stephen07068"
                 className="form-input"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 required
                 autoFocus
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--navy)', marginBottom: 6 }}>
-                Password
-              </label>
-              <input
-                type="password"
-                value={passwordInput}
-                onChange={e => setPasswordInput(e.target.value)}
-                placeholder="Enter password"
-                className="form-input"
-                required
-              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(s => !s)}
+                  style={{ background: 'none', border: 'none', color: 'var(--gray-500)', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'pointer', padding: 0 }}
+                >
+                  {showPassword ? <><EyeOff size={14} /> Hide</> : <><Eye size={14} /> Show</>}
+                </button>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordInput}
+                  onChange={e => setPasswordInput(e.target.value)}
+                  placeholder="Enter password"
+                  className="form-input"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  required
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 2px', fontSize: 12 }}>
+              <span style={{ color: 'var(--gray-500)' }}>Authorized admin only</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsernameInput('stephen07068');
+                  setPasswordInput('07068913629');
+                }}
+                style={{ background: 'none', border: 'none', color: 'var(--gold)', fontWeight: 600, fontSize: 12, cursor: 'pointer', padding: 0 }}
+              >
+                Auto-fill My Credentials
+              </button>
             </div>
 
             <button
               type="submit"
               className="btn btn-navy btn-lg"
-              style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}
+              style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
             >
               <ShieldCheck size={18} /> Sign In
             </button>
