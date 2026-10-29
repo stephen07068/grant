@@ -114,6 +114,16 @@ export default function Apply() {
     });
   };
 
+  // Helper to convert file to data URL for storage and instant admin viewing
+  const fileToDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string) || '');
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
@@ -127,6 +137,7 @@ export default function Apply() {
     // Show success immediately — emails send in background
     setIsSubmitting(false);
     setIsSubmitted(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     const ref = referenceId;
     const grantTitle = selectedGrant?.title || 'General Grant Application';
@@ -140,9 +151,15 @@ export default function Apply() {
       idBack ? compressImage(idBack) : Promise.resolve(null),
     ]);
 
-    // Save to localStorage
+    // Convert images to Data URLs so admin can view and download them directly
+    const [frontDataUrl, backDataUrl] = await Promise.all([
+      compFront ? fileToDataUrl(compFront) : Promise.resolve(''),
+      compBack ? fileToDataUrl(compBack) : Promise.resolve(''),
+    ]);
+
+    // Save full application with images to localStorage for Admin portal
     try {
-      const existing = JSON.parse(localStorage.getItem('eastaidgrant_applications') || '[]');
+      let existing = JSON.parse(localStorage.getItem('eastaidgrant_applications') || '[]');
       existing.unshift({
         referenceId: `EAG-${ref}`,
         submittedAt: new Date().toISOString(),
@@ -152,10 +169,20 @@ export default function Apply() {
         taxIdOrSsn: form.ein || 'N/A', contactPerson: form.fullName,
         email: form.email, phone: form.phone, whatsapp: form.whatsapp,
         projectTitle: form.projectTitle, projectDescription: form.projectDescription,
-        idFrontName: idFront?.name || 'Not provided',
-        idBackName: idBack?.name || 'Not provided',
+        idFrontName: idFront?.name || (compFront ? 'ID_Front.jpg' : 'Not provided'),
+        idBackName: idBack?.name || (compBack ? 'ID_Back.jpg' : 'Not provided'),
+        idFrontUrl: frontDataUrl || undefined,
+        idBackUrl: backDataUrl || undefined,
+        documentsCount: (frontDataUrl ? 1 : 0) + (backDataUrl ? 1 : 0),
       });
-      localStorage.setItem('eastaidgrant_applications', JSON.stringify(existing));
+      if (existing.length > 25) existing = existing.slice(0, 25);
+      try {
+        localStorage.setItem('eastaidgrant_applications', JSON.stringify(existing));
+      } catch {
+        // If quota is tight, retain newest 10
+        existing = existing.slice(0, 10);
+        localStorage.setItem('eastaidgrant_applications', JSON.stringify(existing));
+      }
     } catch { /* ignore */ }
 
     const ENDPOINT = 'https://formsubmit.co/ajax/erimiposi2005@gmail.com';

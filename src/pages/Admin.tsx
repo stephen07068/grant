@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Mail, Clock, Trash2, Send, Lock, LogOut, ShieldCheck, AlertCircle } from 'lucide-react';
+import { FileText, Mail, Clock, Trash2, Send, Lock, LogOut, ShieldCheck, AlertCircle, Download, ExternalLink } from 'lucide-react';
 import Logo from '../components/Logo';
 import './Admin.css';
 
 interface ApplicationRecord {
   referenceId: string;
   submittedAt: string;
-  recipientDeskWhatsApp: string;
+  recipientDeskWhatsApp?: string;
   grantTitle: string;
   awardRange: string;
   applicantName: string;
@@ -20,8 +20,12 @@ interface ApplicationRecord {
   whatsapp: string;
   projectTitle: string;
   projectDescription: string;
-  documentsCount: number;
-  documentNames: string[];
+  documentsCount?: number;
+  documentNames?: string[];
+  idFrontName?: string;
+  idBackName?: string;
+  idFrontUrl?: string;
+  idBackUrl?: string;
 }
 
 interface InquiryRecord {
@@ -365,9 +369,85 @@ export default function Admin() {
                       </p>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: 'var(--gray-500)' }}>
+                    {/* Uploaded Government ID Images & Downloads */}
+                    {(app.idFrontUrl || app.idBackUrl || app.idFrontName || app.idBackName) && (
+                      <div style={{ margin: '14px 0', padding: 14, background: '#f8fafc', borderRadius: 8, border: '1px solid var(--gray-200)' }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', marginBottom: 10 }}>
+                          🪪 Uploaded Government ID Documents
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+                          {/* Front ID */}
+                          <div style={{ background: '#fff', borderRadius: 6, padding: 12, border: '1px solid var(--gray-200)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>Front of ID Card</span>
+                              {app.idFrontUrl && (
+                                <a
+                                  href={app.idFrontUrl}
+                                  download={`Front_ID_${(app.contactPerson || 'Applicant').replace(/\s+/g, '_')}.jpg`}
+                                  className="btn btn-sm btn-navy"
+                                  style={{ padding: '4px 10px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                >
+                                  <Download size={12} /> Download
+                                </a>
+                              )}
+                            </div>
+                            {app.idFrontUrl ? (
+                              <a href={app.idFrontUrl} target="_blank" rel="noopener noreferrer" title="Click to view full image">
+                                <img
+                                  src={app.idFrontUrl}
+                                  alt="Front of ID"
+                                  style={{ width: '100%', height: 160, objectFit: 'contain', background: '#f1f5f9', borderRadius: 4, border: '1px solid var(--gray-200)', cursor: 'pointer', display: 'block' }}
+                                />
+                                <span style={{ display: 'block', fontSize: 11, color: 'var(--gold)', marginTop: 6, textAlign: 'center', fontWeight: 600 }}>
+                                  <ExternalLink size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> View Full Size
+                                </span>
+                              </a>
+                            ) : (
+                              <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--gray-400)', fontSize: 12 }}>
+                                {app.idFrontName ? `Attached: ${app.idFrontName}` : 'No front image provided'}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Back ID */}
+                          <div style={{ background: '#fff', borderRadius: 6, padding: 12, border: '1px solid var(--gray-200)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>Back of ID Card</span>
+                              {app.idBackUrl && (
+                                <a
+                                  href={app.idBackUrl}
+                                  download={`Back_ID_${(app.contactPerson || 'Applicant').replace(/\s+/g, '_')}.jpg`}
+                                  className="btn btn-sm btn-navy"
+                                  style={{ padding: '4px 10px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                >
+                                  <Download size={12} /> Download
+                                </a>
+                              )}
+                            </div>
+                            {app.idBackUrl ? (
+                              <a href={app.idBackUrl} target="_blank" rel="noopener noreferrer" title="Click to view full image">
+                                <img
+                                  src={app.idBackUrl}
+                                  alt="Back of ID"
+                                  style={{ width: '100%', height: 160, objectFit: 'contain', background: '#f1f5f9', borderRadius: 4, border: '1px solid var(--gray-200)', cursor: 'pointer', display: 'block' }}
+                                />
+                                <span style={{ display: 'block', fontSize: 11, color: 'var(--gold)', marginTop: 6, textAlign: 'center', fontWeight: 600 }}>
+                                  <ExternalLink size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 3 }} /> View Full Size
+                                </span>
+                              </a>
+                            ) : (
+                              <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--gray-400)', fontSize: 12 }}>
+                                {app.idBackName ? `Attached: ${app.idBackName}` : 'No back image provided'}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: 'var(--gray-500)', marginTop: 8 }}>
                       <span>Address: {app.address} | Tax ID/SSN: {app.taxIdOrSsn}</span>
-                      <span>Files Attached: {app.documentsCount}</span>
+                      <span>Documents: {app.documentsCount ?? 0}</span>
                     </div>
                   </div>
                 ))}
