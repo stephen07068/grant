@@ -188,58 +188,36 @@ export default function Apply() {
     const WEB3FORMS_KEY = 'ec6ba592-b89b-4a66-a6b8-dd9ae2fa2435';
 
     try {
-      const fd = new FormData();
-      fd.append('access_key', WEB3FORMS_KEY);
-      fd.append('subject', `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
-      fd.append('from_name', 'EastAidGrant Portal');
-      fd.append('Reference ID', `EAG-${ref}`);
-      fd.append('Grant Title', grantTitle);
-      fd.append('Award Range', awardText);
-      fd.append('Applicant / Organization', form.organizationName);
-      fd.append('Applicant Type', form.organizationType);
-      fd.append('Contact Person', form.fullName);
-      fd.append('Email Address', form.email);
-      fd.append('Phone Number', form.phone);
-      fd.append('WhatsApp Number', form.whatsapp);
-      fd.append('Mailing Address', `${form.organizationAddress}, ${form.city}, ${form.state}`);
-      fd.append('EIN or Tax ID', form.ein || 'N/A');
-      fd.append('Project Title', form.projectTitle);
-      fd.append('Project Description', form.projectDescription || 'N/A');
-      fd.append('Submission Time', new Date().toLocaleString());
-      fd.append('Admin Dashboard Link', `${window.location.origin}/admin`);
-      fd.append(
-        'Government ID Photos',
-        frontDataUrl || backDataUrl
-          ? 'Photos uploaded! View full size and download them directly in your Admin Dashboard (/admin).'
-          : 'No ID photos provided'
-      );
-
-      if (compFront) {
-        fd.append('attachment', compFront, `Front_ID_${ref}.jpg`);
-      }
+      const emailPayload = {
+        access_key: WEB3FORMS_KEY,
+        subject: `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`,
+        from_name: 'EastAidGrant Portal',
+        'Reference ID': `EAG-${ref}`,
+        'Grant Title': grantTitle,
+        'Award Range': awardText,
+        'Applicant / Organization': form.organizationName,
+        'Applicant Type': form.organizationType,
+        'Contact Person': form.fullName,
+        'Email Address': form.email,
+        'Phone Number': form.phone,
+        'WhatsApp Number': form.whatsapp,
+        'Mailing Address': `${form.organizationAddress}, ${form.city}, ${form.state}`,
+        'EIN or Tax ID': form.ein || 'N/A',
+        'Project Title': form.projectTitle,
+        'Project Description': form.projectDescription || 'N/A',
+        'Submission Time': new Date().toLocaleString(),
+        'Government ID Uploaded': (frontDataUrl || backDataUrl) ? 'YES (Front & Back uploaded)' : 'No ID provided',
+        'Access ID Photos': `View and download full ID photos in your Admin Dashboard: ${window.location.origin}/admin`,
+      };
 
       fetch('https://api.web3forms.com/submit', {
         method: 'POST',
-        headers: { Accept: 'application/json' },
-        body: fd,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(emailPayload),
       }).catch(err => console.warn('Web3Forms dispatch notice:', err));
-
-      if (compBack) {
-        const fdBack = new FormData();
-        fdBack.append('access_key', WEB3FORMS_KEY);
-        fdBack.append('subject', `🪪 Back of ID Card: ${form.fullName} (Ref: EAG-${ref})`);
-        fdBack.append('from_name', 'EastAidGrant Portal');
-        fdBack.append('Reference ID', `EAG-${ref}`);
-        fdBack.append('Applicant Name', form.fullName);
-        fdBack.append('Note', `Back of ID Card attachment for application EAG-${ref}. Also available to download in Admin portal.`);
-        fdBack.append('attachment', compBack, `Back_ID_${ref}.jpg`);
-
-        fetch('https://api.web3forms.com/submit', {
-          method: 'POST',
-          headers: { Accept: 'application/json' },
-          body: fdBack,
-        }).catch(() => {});
-      }
     } catch { /* ignore */ }
   };
 
