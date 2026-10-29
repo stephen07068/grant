@@ -98,16 +98,16 @@ export default function Admin() {
   const handleTestEmail = async () => {
     setEmailStatus('sending');
     try {
-      await fetch('https://formsubmit.co/ajax/erimiposi2005@gmail.com', {
+      const res = await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          _subject: '✅ EastAidGrant Test Application Email',
-          _template: 'table',
-          _captcha: 'false',
+          access_key: 'ec6ba592-b89b-4a66-a6b8-dd9ae2fa2435',
+          subject: '✅ EastAidGrant Test Application Email',
+          from_name: 'EastAidGrant Administration',
           'Status': 'Test Verification Successful',
           'Target Email': 'erimiposi2005@gmail.com',
           'Test Grant': 'Individual Personal Hardship & Emergency Relief Grant ($20,000 - $45,000)',
@@ -119,8 +119,14 @@ export default function Admin() {
           'Timestamp': new Date().toLocaleString(),
         }),
       });
-      setEmailStatus('sent');
-      setTimeout(() => setEmailStatus('idle'), 5000);
+      const data = await res.json();
+      if (data.success) {
+        setEmailStatus('sent');
+        setTimeout(() => setEmailStatus('idle'), 5000);
+      } else {
+        setEmailStatus('idle');
+        alert(data.message || 'Failed to send test email.');
+      }
     } catch {
       setEmailStatus('idle');
       alert('Failed to send test email.');

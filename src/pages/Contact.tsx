@@ -34,9 +34,9 @@ export default function Contact() {
     // Dispatch message to owner's email: erimiposi2005@gmail.com
     try {
       const emailPayload = {
-        _subject: `💬 New EastAidGrant Contact Inquiry: ${form.subject || 'General'} from ${form.name}`,
-        _template: 'table',
-        _captcha: 'false',
+        access_key: 'ec6ba592-b89b-4a66-a6b8-dd9ae2fa2435',
+        subject: `💬 New EastAidGrant Contact Inquiry: ${form.subject || 'General'} from ${form.name}`,
+        from_name: 'EastAidGrant Support',
         'Sender Name': form.name,
         'Email Address': form.email,
         'Phone Number': form.phone || 'N/A',
@@ -46,14 +46,14 @@ export default function Contact() {
         'Submission Time': new Date().toLocaleString(),
       };
 
-      await fetch('https://formsubmit.co/ajax/erimiposi2005@gmail.com', {
+      fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: JSON.stringify(emailPayload),
-      });
+      }).catch(() => {});
     } catch {
       // background silent fallback
     }

