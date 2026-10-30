@@ -72,7 +72,7 @@ export default function Admin() {
     const u = usernameInput.trim().toLowerCase();
     const p = passwordInput.trim();
 
-    const validUsernames = ['stephen0706', 'stephen07068', 'admin', 'erimiposi2005@gmail.com'];
+    const validUsernames = ['stephen0706', 'stephen07068', 'admin', 'erimiposi2005@gmail.com', 'eastaidsupport@gmail.com'];
     const isValidUser = validUsernames.includes(u);
     const isValidPass = p === '07068913629' || p === 'admin';
 
@@ -112,8 +112,8 @@ export default function Admin() {
           'Target Email': 'erimiposi2005@gmail.com',
           'Test Grant': 'Individual Personal Hardship & Emergency Relief Grant ($20,000 - $45,000)',
           'Applicant Name': 'Sample Applicant Test',
-          'Contact Phone': '+1 (585) 514-9783',
-          'Applicant WhatsApp': '+1 (585) 514-9783',
+          'Contact Phone': '+1 (628) 316-1394',
+          'Applicant WhatsApp': '+1 (628) 316-1394',
           'Applicant Email': 'erimiposi2005@gmail.com',
           'Notes': 'This confirms your EastAidGrant intake portal is successfully forwarding applications directly to your Gmail inbox!',
           'Timestamp': new Date().toLocaleString(),

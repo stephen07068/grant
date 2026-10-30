@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MapPin, Send, CheckCircle, MessageSquare } from 'lucide-react';
+import { Mail, MapPin, Send, CheckCircle, Phone } from 'lucide-react';
 import './Contact.css';
 
 export default function Contact() {
@@ -14,11 +14,11 @@ export default function Contact() {
 
     const inquiryRecord = {
       submittedAt: new Date().toISOString(),
-      recipientDeskWhatsApp: '+15855149783',
+      recipientDeskWhatsApp: 'N/A',
       name: form.name,
       email: form.email,
       phone: form.phone || 'N/A',
-      whatsapp: form.whatsapp || 'N/A',
+      whatsapp: 'N/A',
       subject: form.subject || 'General Inquiry',
       message: form.message,
     };
@@ -37,10 +37,10 @@ export default function Contact() {
         access_key: 'ec6ba592-b89b-4a66-a6b8-dd9ae2fa2435',
         subject: `💬 New EastAidGrant Contact Inquiry: ${form.subject || 'General'} from ${form.name}`,
         from_name: 'EastAidGrant Support',
+        'Support Email': 'eastaidsupport@gmail.com',
         'Sender Name': form.name,
         'Email Address': form.email,
         'Phone Number': form.phone || 'N/A',
-        'WhatsApp Number': form.whatsapp || 'N/A',
         'Topic / Subject': form.subject || 'General Inquiry',
         'Message': form.message,
         'Submission Time': new Date().toLocaleString(),
@@ -64,9 +64,9 @@ export default function Contact() {
   };
 
   const info = [
-    { icon: <MessageSquare size={20} />, label: 'WhatsApp', value: '+1 (585) 514-9783',       sub: 'Direct chat & support'   },
-    { icon: <Mail size={20} />,          label: 'Email',    value: 'support@eastaidgrant.com', sub: 'We reply within 24 hours' },
-    { icon: <MapPin size={20} />,        label: 'Location', value: 'United States',            sub: 'Serving all 50 states'   },
+    { icon: <Phone size={20} />,  label: 'Phone Support', value: '+1 (628) 316-1394',        sub: 'Direct call & inquiries',  href: 'tel:+16283161394' },
+    { icon: <Mail size={20} />,   label: 'Email Support', value: 'eastaidsupport@gmail.com', sub: 'We reply within 24 hours', href: 'mailto:eastaidsupport@gmail.com' },
+    { icon: <MapPin size={20} />, label: 'Location',      value: 'United States',            sub: 'Serving all 50 states' },
   ];
 
   return (
@@ -92,7 +92,19 @@ export default function Contact() {
                 <div className="contact-info-icon">{item.icon}</div>
                 <div>
                   <p className="contact-info-label">{item.label}</p>
-                  <p className="contact-info-value">{item.value}</p>
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      target={item.href.startsWith('http') ? '_blank' : undefined}
+                      rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      className="contact-info-value"
+                      style={{ color: 'var(--navy)', textDecoration: 'none', display: 'inline-block' }}
+                    >
+                      {item.value}
+                    </a>
+                  ) : (
+                    <p className="contact-info-value">{item.value}</p>
+                  )}
                   <p className="contact-info-sub">{item.sub}</p>
                 </div>
               </div>
@@ -110,7 +122,7 @@ export default function Contact() {
                 Thank you for reaching out. Your message has been logged into our support queue.
               </p>
               <div style={{ margin: '18px 0', padding: '12px 14px', background: 'rgba(201, 168, 76, 0.12)', borderRadius: 'var(--radius)', borderLeft: '4px solid var(--gold)', textAlign: 'left', fontSize: 13.5, color: 'var(--navy-mid)', lineHeight: 1.5 }}>
-                🔔 <strong>Notice:</strong> You will be notified regarding your inquiry through your email, WhatsApp, or phone number within 24 hours.
+                🔔 <strong>Notice:</strong> You will be notified regarding your inquiry through your email or phone number within 24 hours.
               </div>
               <button
                 onClick={() => { setStatus('idle'); setForm({ name: '', email: '', phone: '', whatsapp: '', subject: '', message: '' }); }}
@@ -139,20 +151,16 @@ export default function Contact() {
                   <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+1 (555) 123-4567" className="form-input" required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">WhatsApp Number <span className="req">*</span></label>
-                  <input type="tel" value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} placeholder="+1 (555) 123-4567" className="form-input" required />
+                  <label className="form-label">Subject</label>
+                  <select value={form.subject} onChange={e => set('subject', e.target.value)} className="form-select">
+                    <option value="">Choose a topic...</option>
+                    <option>Grant Eligibility Question</option>
+                    <option>Application Assistance</option>
+                    <option>Technical Support</option>
+                    <option>Partnership Inquiry</option>
+                    <option>General Question</option>
+                  </select>
                 </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Subject</label>
-                <select value={form.subject} onChange={e => set('subject', e.target.value)} className="form-select">
-                  <option value="">Choose a topic...</option>
-                  <option>Grant Eligibility Question</option>
-                  <option>Application Assistance</option>
-                  <option>Technical Support</option>
-                  <option>Partnership Inquiry</option>
-                  <option>General Question</option>
-                </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Message <span className="req">*</span></label>

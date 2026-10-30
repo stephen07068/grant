@@ -53,11 +53,11 @@ export default function Footer() {
               <ul className="footer-contact-list">
                 <li>
                   <Mail size={13} />
-                  <a href="mailto:support@eastaidgrant.com">support@eastaidgrant.com</a>
+                  <a href="mailto:eastaidsupport@gmail.com">eastaidsupport@gmail.com</a>
                 </li>
                 <li>
                   <Phone size={13} />
-                  <a href="https://wa.me/15855149783" target="_blank" rel="noopener noreferrer">+1 (585) 514-9783 (WhatsApp)</a>
+                  <a href="tel:+16283161394">+1 (628) 316-1394</a>
                 </li>
               </ul>
             </div>
